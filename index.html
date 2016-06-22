@@ -141,7 +141,7 @@
     <script>
         var myDate = function() {
             var d = new Date();
-            return d.getFullYear() + "" + (d.getMonth() + 1) + "" + (d.getDate() + $("#inputDate").val());
+            return d.getFullYear() + "" + (d.getMonth() + 1) + "" + (+d.getDate() + +$("#inputDate").val());
         };
 
         var getUrl = function(source)
