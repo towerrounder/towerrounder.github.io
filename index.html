@@ -71,6 +71,17 @@
                                     <option value="gppc-blog" selected>GPPC blog</option>
                                 </select>
                             </div>
+                            <div class="form-group">
+                                <label for="inputDate">Date</label>
+                                <select class="form-control" id="inputDate">
+                                    <option value="0" selected>+0</option>
+                                    <option value="1">+1</option>
+                                    <option value="2">+2</option>
+                                    <option value="3">+3</option>
+                                    <option value="4">+4</option>
+                                </select>
+                                <span id="helpBlock" class="help-block">Add an extra day to the utm_content field</span>
+                            </div>
                         </form>
                     </div>
                 </div>
@@ -130,7 +141,7 @@
     <script>
         var myDate = function() {
             var d = new Date();
-            return d.getFullYear() + "" + (d.getMonth() + 1) + "" + d.getDate();
+            return d.getFullYear() + "" + (d.getMonth() + 1) + "" + (d.getDate() + $("#inputDate").val());
         };
 
         var getUrl = function(source)
