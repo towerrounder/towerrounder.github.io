@@ -54,7 +54,7 @@
                                 <select class="form-control" id="inputLandingPageUrl">
                                     <option value="https://getprophotoclub.leadpages.co/free-online-training-lp-evergreen/" selected>https://getprophotoclub.leadpages.co/free-online-training-lp-evergreen/</option>
                                     <option value="https://getprophotoclub.samcart.com/products/get-pro-photo-club-membership-4ffpff-offer-evergreen">https://getprophotoclub.samcart.com/products/get-pro-photo-club-membership-4ffpff-offer-evergreen</option>
-                                </select
+                                </select>
                             </div>
                             <div class="form-group">
                                 <label for="inputCampaignMedium">Campaign Medium</label>
@@ -171,7 +171,8 @@
                     ).toLowerCase();
         };
 
-        $("input, select").on("input", function(event){
+        var refreshLinks = function()
+        {
             $("#sharing-link-facebook")
                 .attr("href", getUrl("facebook"))
                 .html(getUrl("facebook"));
@@ -193,7 +194,12 @@
             $("#sharing-link-tumblr")
                 .attr("href", getUrl("tumblr"))
                 .html(getUrl("tumblr"));
-        });
+        };
+        
+        $("input, select").on("input", refreshLinks);
+        
+        refreshLinks();
+        
     </script>
 </body>
 
