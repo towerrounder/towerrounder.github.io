@@ -149,6 +149,18 @@
                 <a href="#" id="sharing-link-tumblr"></a>
             </div>
         </div>
+        <div class="panel panel-default">
+            <div class="panel-heading">Blog post</div>
+            <div class="panel-body">
+                <a href="#" id="sharing-link-blogpost"></a>
+            </div>
+        </div>
+        <div class="panel panel-default">
+            <div class="panel-heading">Blog email</div>
+            <div class="panel-body">
+                <a href="#" id="sharing-link-blogemail"></a>
+            </div>
+        </div>
     </div>
 
     <!-- Bootstrap CDN -->
@@ -196,6 +208,12 @@
             $("#sharing-link-tumblr")
                 .attr("href", getUrl("tumblr"))
                 .html(getUrl("tumblr"));
+            $("#sharing-link-blogpost")
+                .attr("href", getUrl("blogpost"))
+                .html(getUrl("blogpost"));
+            $("#sharing-link-blogemail")
+                .attr("href", getUrl("blogemail"))
+                .html(getUrl("blogemail"));
         };
         
         $("input, select").on("input", refreshLinks);
