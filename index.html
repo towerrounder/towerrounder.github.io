@@ -50,12 +50,16 @@
                     <div class="panel-body">
                         <form>
                             <div class="form-group">
-                                <label for="inputLandingPageUrl">Landing Page URL</label>
-                                <select class="form-control" id="inputLandingPageUrl">
+                                <label for="selectLandingPageUrl">Select Landing Page URL</label>
+                                <select class="form-control" id="selectLandingPageUrl">
                                     <option value="https://getprophotoclub.leadpages.co/free-online-training-lp-evergreen/" selected>https://getprophotoclub.leadpages.co/free-online-training-lp-evergreen/</option>
                                     <option value="https://getprophotoclub.samcart.com/products/get-pro-photo-club-membership-4ffpff-offer-evergreen">https://getprophotoclub.samcart.com/products/get-pro-photo-club-membership-4ffpff-offer-evergreen</option>
                                     <option value="https://getprophotoclub.leadpages.co/gppc-one-month-free-offer/">https://getprophotoclub.leadpages.co/gppc-one-month-free-offer/</option>
                                 </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="inputLandingPageUrl">Type Landing Page URL</label>
+                                <input type="text" class="form-control" id="inputLandingPageUrl">
                             </div>
                             <div class="form-group">
                                 <label for="inputCampaignMedium">Campaign Medium</label>
@@ -177,7 +181,12 @@
 
         var getUrl = function(source)
         {
-            return ($("#inputLandingPageUrl").val() 
+            var landingPageVal = $("#inputLandingPageUrl").val();
+            
+            if($.trim(landingPage).length === 0)
+                landingPageVal = $("#selectLandingPageUrl").val();
+            
+            return (landingPageVal 
                     + "?utm_source=" + source 
                     + "&utm_medium="  + $("#inputCampaignMedium").val()
                     + "&utm_campaign=" + $("#inputCampaignName").val()
