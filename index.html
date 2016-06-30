@@ -181,9 +181,9 @@
 
         var getUrl = function(source)
         {
-            var landingPageVal = $("#inputLandingPageUrl").val();
+            var landingPageVal = $.trim($("#inputLandingPageUrl").val());
             
-            if($.trim(landingPageVal).length === 0)
+            if(landingPageVal.length === 0)
                 landingPageVal = $("#selectLandingPageUrl").val();
             
             return (landingPageVal 
