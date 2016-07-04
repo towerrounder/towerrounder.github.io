@@ -189,9 +189,9 @@
             var ret = d.getFullYear() + "";
             
             if(String(d.getMonth()).length === 1)
-                ret += "0" + d.getMonth();
+                ret += "0" + (d.getMonth() + 1);
             else
-                ret += d.getMonth();
+                ret += (d.getMonth() + 1);
                 
             if(String(d.getDate()).length === 1)
                 ret += "0" + d.getDate();
