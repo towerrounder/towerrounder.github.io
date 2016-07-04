@@ -174,22 +174,30 @@
         crossorigin="anonymous"></script>
 
     <script>
+        function addDays(date, days) {
+            var result = new Date(date);
+            result.setDate(result.getDate() + days);
+            return result;
+        }
+
         var myDate = function() {
             var d = new Date();
+            
+            //Add the days from the select box first
+            d = addDays(d, +$("#inputDate").val());
+            
             var ret = d.getFullYear() + "";
             
-            if(String(d.getMonth().length === 1)
+            if(String(d.getMonth()).length === 1)
                 ret += "0" + d.getMonth();
             else
                 ret += d.getMonth();
                 
-            if(String(d.getDate().length === 1)
+            if(String(d.getDate()).length === 1)
                 ret += "0" + d.getDate();
             else
                 ret += d.getDate();
                 
-            ret += +$("#inputDate").val()
-            
             return  ret;
         };
 
