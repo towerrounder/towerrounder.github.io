@@ -183,6 +183,12 @@
                 <a href="#" id="sharing-link-emailcourseemail"></a>
             </div>
         </div>
+        <div class="panel panel-default">
+            <div class="panel-heading">Email course video page</div>
+            <div class="panel-body">
+                <a href="#" id="sharing-link-emailcoursevideopage"></a>
+            </div>
+        </div>
     </div>
 
     <!-- Bootstrap CDN -->
@@ -266,6 +272,9 @@
             $("#sharing-link-emailcourseemail")
                 .attr("href", getUrl("emailcourseemail"))
                 .html(getUrl("emailcourseemail"));
+            $("#sharing-link-emailcoursevideopage")
+                .attr("href", getUrl("emailcoursevideopage"))
+                .html(getUrl("emailcoursevideopage"));
         };
         
         $("input, select").on("input", refreshLinks);
