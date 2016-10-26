@@ -201,6 +201,18 @@
                 <a href="#" id="sharing-link-emailcourse"></a>
             </div>
         </div>
+        <div class="panel panel-default">
+            <div class="panel-heading">GPPC store</div>
+            <div class="panel-body">
+                <a href="#" id="sharing-link-gppcstore"></a>
+            </div>
+        </div>
+        <div class="panel panel-default">
+            <div class="panel-heading">GPPC home page</div>
+            <div class="panel-body">
+                <a href="#" id="sharing-link-gppchomepage"></a>
+            </div>
+        </div>
     </div>
 
     <!-- Bootstrap CDN -->
@@ -290,6 +302,12 @@
              $("#sharing-link-emailcourse")
                 .attr("href", getUrl("emailcourse"))
                 .html(getUrl("emailcourse"));
+            $("#sharing-link-gppcstore")
+                .attr("href", getUrl("gppcstore"))
+                .html(getUrl("gppcstore"));
+            $("#sharing-link-gppchomepage")
+                .attr("href", getUrl("gppchomepage"))
+                .html(getUrl("gppchomepage"));
         };
         
         $("input, select").on("input", refreshLinks);
