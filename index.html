@@ -1,0 +1,123 @@
+<html>
+
+<head>
+    <meta charset="UTF-8">
+</head>
+
+<body>
+    <h2>Spread</h2>
+    <i>Should be less than or equal to 3</i>
+    <table>
+        <tr>
+            <td>Offer</td>
+            <td>
+                <input id="inOffer" type="text" />
+                <i>What the sell at (always higher than the bid)</i>
+            </td>
+        </tr>
+        <tr>
+            <td>Bid</td>
+            <td>
+                <input id="inBid" type="text" />
+                <i>What they buy at</i>
+            </td>
+        </tr>
+        <tr>
+            <td>Spread</td>
+            <td>
+                <input id="inSpread" readonly type="text" />
+                <i id="iSpreadComment"></i>
+            </td>
+        </tr>
+    </table>
+    <h2>Net Debt Ratio</h2>
+    <i>Should be less than or eual to 3</i>
+    <table>
+        <tr>
+            <td>Net Debt</td>
+            <td>
+                <input id="inNetDebt" type="text" />
+            </td>
+        </tr>
+        <tr>
+            <td>Pre-tax Profit</td>
+            <td>
+                <input id="inPretaxProfit" type="text" />
+            </td>
+        </tr>
+        <tr>
+            <td>Debt Ratio</td>
+            <td>
+                <input id="inDebtRatio" readonly type="text" />
+                <i id="iDebtRatioComment"></i>
+            </td>
+        </tr>
+    </table>
+    <h2>Valuation</h2>
+    <i>The company should be less thatn 15 ratio profit to market cap</i>
+    <table>
+        <tr>
+            <td>Market Cap.</td>
+            <td>
+                <input id="inMarketCap" type="text" />
+            </td>
+        </tr>
+        <tr>
+            <td>Market Ratio</td>
+            <td>
+                <input id="inMarketCapRatio" readonly type="text" />
+                <i id="iMarketCapRatioComment"></i>
+            </td>
+        </tr>
+    </table>
+    <script>
+        var niceNumber = function (x) {
+            return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        }
+    </script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script>
+        var $inBid = $("#inBid");
+        var $inOffer = $("#inOffer");
+        var $inSpread = $("#inSpread");
+        var $iSpreadComment = $("#iSpreadComment");
+
+        var $inNetDebt = $("#inNetDebt");
+        var $inPretaxProfit = $("#inPretaxProfit");
+        var $inDebtRatio = $("#inDebtRatio");
+        var $iDebtRatioComment = $("#iDebtRatioComment");
+
+        var $inMarketCap = $("#inMarketCap");
+        var $inMarketCapRatio = $("#inMarketCapRatio");
+        var $iMarketCapRatioComment = $("#iMarketCapRatioComment");
+
+        $("#inBid, #inOffer").on("input", function (event) {
+            var difference = $inOffer.val() - $inBid.val();
+            var percentage = parseFloat(((difference / $inOffer.val()) * 100)).toFixed(2);
+
+            $inSpread.val(percentage);
+
+            var answer = Math.round(percentage) <= 3 ? "Yes" : "No";
+            $iSpreadComment.text(answer + ". The spread is " + percentage + "%");
+        });
+
+        $("#inPretaxProfit, #inDebtRatio").on("input", function (event) {
+            var ratio = parseFloat($inNetDebt.val() / $inPretaxProfit.val()).toFixed(2);
+            $inDebtRatio.val(ratio);
+
+            var answer = Math.round(ratio) <= 3 ? "Yes" : "No";
+            $iDebtRatioComment.text(answer + ". The company had a pre-tax profit of £" + niceNumber($inPretaxProfit.val()) + " and net debt of £" + niceNumber($inNetDebt.val() + " giving a debt to profit ratio of " + ratio));
+        });
+
+        $inMarketCap.on("input", function (event) {
+            var ratio = parseFloat($inMarketCap.val() / $inPretaxProfit.val()).toFixed(2);
+            $inMarketCapRatio.val(ratio);
+
+            var answer = Math.round(ratio) <= 15 ? "Yes" : "No";
+            $iMarketCapRatioComment.text(answer + ". The company had a pre-tax profit of £" + niceNumber($inPretaxProfit.val()) + " and a market cap of £" + niceNumber($inMarketCap.val() + " giving a market cap to profit ratio of " + ratio));
+        });
+
+    </script>
+</body>
+
+</html>
