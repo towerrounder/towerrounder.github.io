@@ -2,6 +2,13 @@
 
 <head>
     <meta charset="UTF-8">
+    <style>
+        tr>td:first-child {
+            text-align: right;
+            width:120px;
+            padding: 2px;
+        }
+    </style>
 </head>
 
 <body>
@@ -26,7 +33,7 @@
             <td>Spread</td>
             <td>
                 <input id="inSpread" readonly type="text" />
-                <i id="iSpreadComment"></i>
+                <span id="iSpreadComment"></span>
             </td>
         </tr>
     </table>
@@ -49,7 +56,7 @@
             <td>Debt Ratio</td>
             <td>
                 <input id="inDebtRatio" readonly type="text" />
-                <i id="iDebtRatioComment"></i>
+                <span id="iDebtRatioComment"></span>
             </td>
         </tr>
     </table>
@@ -66,10 +73,12 @@
             <td>Market Ratio</td>
             <td>
                 <input id="inMarketCapRatio" readonly type="text" />
-                <i id="iMarketCapRatioComment"></i>
+                <span id="iMarketCapRatioComment"></span>
             </td>
         </tr>
     </table>
+    <h2>Summary</h2>
+    <span id="sSummary"></span>
     <script>
         var niceNumber = function (x) {
             return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
@@ -91,30 +100,39 @@
         var $inMarketCapRatio = $("#inMarketCapRatio");
         var $iMarketCapRatioComment = $("#iMarketCapRatioComment");
 
-        $("#inBid, #inOffer").on("input", function (event) {
-            var difference = $inOffer.val() - $inBid.val();
-            var percentage = parseFloat(((difference / $inOffer.val()) * 100)).toFixed(2);
+        var $sSummary = $("#sSummary");
 
-            $inSpread.val(percentage);
+        $("input").on("input", function (event) {
 
-            var answer = Math.round(percentage) <= 3 ? "Yes" : "No";
-            $iSpreadComment.text(answer + ". The spread is " + percentage + "%");
-        });
+            //Spread
+            var offer = $inOffer.val();
+            var bid = $inBid.val();
+            var spread_difference = offer - bid;
+            var spread_percentage = parseFloat(((spread_difference / offer) * 100)).toFixed(2);
+            $inSpread.val(spread_percentage);
+            var spread_answer = Math.round(spread_percentage) <= 3 ? "Yes" : "No";
+            $iSpreadComment.text(spread_answer + ". The spread is " + spread_percentage + "%");
 
-        $("#inPretaxProfit, #inDebtRatio").on("input", function (event) {
-            var ratio = parseFloat($inNetDebt.val() / $inPretaxProfit.val()).toFixed(2);
-            $inDebtRatio.val(ratio);
+            //Debt to Profit Ratio
+            var debt = $inNetDebt.val();
+            var profit = $inPretaxProfit.val();
+            var debt_proft_ratio = parseFloat(debt / profit).toFixed(2);
+            $inDebtRatio.val(debt_proft_ratio);
+            var debt_proft_answer = Math.round(debt_proft_ratio) <= 3 ? "Yes" : "No";
+            $iDebtRatioComment.text(debt_proft_answer + ". The company had a pre-tax profit of £" + niceNumber(profit) + " and net debt of £" + niceNumber(debt) + " giving a debt to profit ratio of " + debt_proft_ratio);
 
-            var answer = Math.round(ratio) <= 3 ? "Yes" : "No";
-            $iDebtRatioComment.text(answer + ". The company had a pre-tax profit of £" + niceNumber($inPretaxProfit.val()) + " and net debt of £" + niceNumber($inNetDebt.val() + " giving a debt to profit ratio of " + ratio));
-        });
+            //Market Cap
+            var marketcap = $inMarketCap.val();
+            var market_profit_ratio = parseFloat(marketcap / profit).toFixed(2);
+            $inMarketCapRatio.val(market_profit_ratio);
+            var market_profit_answer = Math.round(market_profit_ratio) <= 15 ? "Yes" : "No";
+            $iMarketCapRatioComment.text(market_profit_answer + ". The company had a pre-tax profit of £" + niceNumber(profit) + " and a market cap of £" + niceNumber(marketcap) + " giving a market cap to profit ratio of " + market_profit_ratio);
 
-        $inMarketCap.on("input", function (event) {
-            var ratio = parseFloat($inMarketCap.val() / $inPretaxProfit.val()).toFixed(2);
-            $inMarketCapRatio.val(ratio);
-
-            var answer = Math.round(ratio) <= 15 ? "Yes" : "No";
-            $iMarketCapRatioComment.text(answer + ". The company had a pre-tax profit of £" + niceNumber($inPretaxProfit.val()) + " and a market cap of £" + niceNumber($inMarketCap.val() + " giving a market cap to profit ratio of " + ratio));
+            //Summary
+            var summary = "Spread - " + spread_answer + ": " + spread_percentage + ". ";
+            summary += "Small Debt - " + debt_proft_answer + ": " + debt_proft_ratio + ". ";
+            summary += "Undervalued - " + market_profit_answer + ": " + market_profit_ratio + ".";
+            $sSummary.text(summary);
         });
 
     </script>
