@@ -161,7 +161,7 @@
                 var $summary_page = $(summary_response);
 
                 var hostname = $('<a>').prop('href', lse_summary_url).prop('hostname');
-                var lse_fundamentals_url = hostname + '/' + $summary_page.find("a:contains('Fundamentals')").prop("href");
+                var lse_fundamentals_url = hostname + '/' + $summary_page.find("a:contains('Fundamentals')").attr("href");
                 //debug
                 //lse_fundamentals_url = "https://www.londonstockexchange.com/exchange/prices/stocks/summary/fundamentals.html?fourWayKey=GB0009035741GBGBXSSQ3";
 
