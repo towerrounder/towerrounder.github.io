@@ -5,13 +5,23 @@
     <style>
         tr>td:first-child {
             text-align: right;
-            width:120px;
+            width: 120px;
             padding: 2px;
+        }
+
+        body * {
+            font-family: Calibri, sans-serif;
+            font-size: 11px;
+        }
+        h2 {
+            font-size: 16px;
         }
     </style>
 </head>
 
 <body>
+    <span>London Stock Exchange Summary Page URL</span><br>
+    <input type="url" id="inURL" style="width:600px"><button id="btParse">Parse</button>
     <h2>Spread</h2>
     <i>Should be less than or equal to 3</i>
     <table>
@@ -86,24 +96,14 @@
     </script>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
     <script>
-        var $inBid = $("#inBid");
-        var $inOffer = $("#inOffer");
-        var $inSpread = $("#inSpread");
-        var $iSpreadComment = $("#iSpreadComment");
+        var fetchURL = function (url, callback) {
+            var url = "http://allorigins.me/get?method=raw&url=" + encodeURIComponent(url) + "&callback=?";
+            $.get(url, function (response) {
+                callback(response);
+            });
+        };
 
-        var $inNetDebt = $("#inNetDebt");
-        var $inPretaxProfit = $("#inPretaxProfit");
-        var $inDebtRatio = $("#inDebtRatio");
-        var $iDebtRatioComment = $("#iDebtRatioComment");
-
-        var $inMarketCap = $("#inMarketCap");
-        var $inMarketCapRatio = $("#inMarketCapRatio");
-        var $iMarketCapRatioComment = $("#iMarketCapRatioComment");
-
-        var $sSummary = $("#sSummary");
-
-        $("input").on("input", function (event) {
-
+        var calculate = function () {
             //Spread
             var offer = $inOffer.val();
             var bid = $inBid.val();
@@ -133,7 +133,71 @@
             summary += "Small Debt - " + debt_proft_answer + ": " + debt_proft_ratio + ". ";
             summary += "Undervalued - " + market_profit_answer + ": " + market_profit_ratio + ".";
             $sSummary.text(summary);
+        };
+
+        $inURL = $("#inURL");
+        $btParse = $("#btParse");
+
+        var $inBid = $("#inBid");
+        var $inOffer = $("#inOffer");
+        var $inSpread = $("#inSpread");
+        var $iSpreadComment = $("#iSpreadComment");
+
+        var $inNetDebt = $("#inNetDebt");
+        var $inPretaxProfit = $("#inPretaxProfit");
+        var $inDebtRatio = $("#inDebtRatio");
+        var $iDebtRatioComment = $("#iDebtRatioComment");
+
+        var $inMarketCap = $("#inMarketCap");
+        var $inMarketCapRatio = $("#inMarketCapRatio");
+        var $iMarketCapRatioComment = $("#iMarketCapRatioComment");
+
+        var $sSummary = $("#sSummary");
+
+        $btParse.on("click", function (event) {
+            var lse_summary_url = $inURL.val();
+
+            fetchURL(lse_summary_url, function (summary_response) {
+                var $summary_page = $(summary_response);
+
+                var hostname = $('<a>').prop('href', lse_summary_url).prop('hostname');
+                var lse_fundamentals_url = hostname + '/' + $summary_page.find("a:contains('Fundamentals')").prop("href");
+                //debug
+                lse_fundamentals_url = "https://www.londonstockexchange.com/exchange/prices/stocks/summary/fundamentals.html?fourWayKey=GB0009035741GBGBXSSQ3";
+
+                var $trBidOffer = $summary_page.find("td:contains('Bid')").parent();
+                var $tdBid = $trBidOffer.find("td:nth-child(2)");
+                var bid = $tdBid.text();
+                var $tdOffer = $trBidOffer.find("td:nth-child(4)");
+                var offer = $tdOffer.text();
+                $inBid.val(bid);
+                $inOffer.val(offer);
+
+                fetchURL(lse_fundamentals_url, function (fundamentals_response) {
+                    var $fundamentals_page = $(fundamentals_response);
+
+                    var $trProf = $fundamentals_page.find("td:contains('Profit Before Tax')").parent();
+                    var $tdProf = $trProf.find("td:last-child");
+                    var prof = parseFloat($tdProf.text()) * 1000000;
+
+                    var $trLiabilities = $fundamentals_page.find("td:contains('Total Liabilities')").parent();
+                    var $tdLiabilities = $trLiabilities.find("td:last-child");
+                    var liabilities = parseFloat($tdLiabilities.text()) * 1000000;
+
+                    var $trMarketCap = $fundamentals_page.find("td:contains('Security market cap')").parent();
+                    var $tdMarketCap = $trMarketCap.find("td:last-child");
+                    var marketCap = parseFloat($tdMarketCap.text()) * 1000000;
+
+                    $inPretaxProfit.val(prof);
+                    $inNetDebt.val(liabilities);
+                    $inMarketCap.val(marketCap);
+
+                    calculate();
+                });
+            });
         });
+
+        $("input[type='text']").on("input", calculate);
 
     </script>
 </body>
