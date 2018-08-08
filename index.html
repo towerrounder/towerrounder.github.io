@@ -15,16 +15,36 @@
         }
         h2 {
             font-size: 16px;
+            margin: 10px 0px 0px 0px;
+        }
+        #inURL{
+            margin-right: 4px;
+        }
+
+        input:read-only {
+            background-color: #eee;
+            border-style: solid;
+            border-width: 1px;
         }
     </style>
 </head>
 
-<body>
-    <span>London Stock Exchange Summary Page URL</span><br>
-    <input type="url" id="inURL" style="width:600px"><button id="btParse">Parse</button>
-    <h2>Spread</h2>
-    <i>Should be less than or equal to 3</i>
+<body>    
     <table>
+        <tr>
+            <td>&nbsp;</td>
+            <td>
+                <h2>LSE Summary Page URL</h2>
+                <input type="url" id="inURL" style="width:600px"><button id="btParse">Parse</button>
+            </td>
+        </tr>
+        <tr>
+            <td>&nbsp;</td>
+            <td>
+                    <h2>Spread</h2>
+                    <i>Should be less than or equal to 3</i>
+            </td>
+        </tr>
         <tr>
             <td>Offer</td>
             <td>
@@ -46,10 +66,25 @@
                 <span id="iSpreadComment"></span>
             </td>
         </tr>
-    </table>
-    <h2>Net Debt Ratio</h2>
-    <i>Should be less than or eual to 3</i>
-    <table>
+        <tr>
+            <td>&nbsp;</td>
+            <td>
+                <h2>Net Debt Ratio</h2>
+                <i>Total liabilities minus cash. Should be less than or eual to 3</i>
+            </td>
+        </tr>
+        <tr>
+            <td>Total Liabilities</td>
+            <td>
+                <input id="inTotalLiabilities" type="text" />
+            </td>
+        </tr>
+        <tr>
+            <td>Cash</td>
+            <td>
+                <input id="inCash" type="text" />
+            </td>
+        </tr>
         <tr>
             <td>Net Debt</td>
             <td>
@@ -69,10 +104,13 @@
                 <span id="iDebtRatioComment"></span>
             </td>
         </tr>
-    </table>
-    <h2>Valuation</h2>
-    <i>The company should be less thatn 15 ratio profit to market cap</i>
-    <table>
+        <tr>
+            <td>&nbsp;</td>
+            <td>
+                <h2>Valuation</h2>
+                <i>The company should be less thatn 15 ratio profit to market cap</i>
+            </td>
+        </tr>
         <tr>
             <td>Market Cap.</td>
             <td>
@@ -86,16 +124,41 @@
                 <span id="iMarketCapRatioComment"></span>
             </td>
         </tr>
+        <tr>
+            <td>&nbsp;</td>
+            <td>
+                <h2>Summary</h2>
+                <i>A brief description of the above</i>
+            </td>
+        </tr>
+        <tr>
+            <td>&nbsp;</td>
+            <td>
+                <span id="sSummary"></span>
+            </td>
+        </tr>
     </table>
-    <h2>Summary</h2>
-    <span id="sSummary"></span>
-    <script>
-        var niceNumber = function (x) {
-            return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-        }
-    </script>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
     <script>
+        var $inURL = $("#inURL");
+        var $btParse = $("#btParse");
+        var $inBid = $("#inBid");
+        var $inOffer = $("#inOffer");
+        var $inSpread = $("#inSpread");
+        var $iSpreadComment = $("#iSpreadComment");
+        var $inTotalLiabilities = $("#inTotalLiabilities");
+        var $inCash = $("#inCash");
+        var $inNetDebt = $("#inNetDebt");
+        var $inPretaxProfit = $("#inPretaxProfit");
+        var $inDebtRatio = $("#inDebtRatio");
+        var $iDebtRatioComment = $("#iDebtRatioComment");
+        var $inMarketCap = $("#inMarketCap");
+        var $inMarketCapRatio = $("#inMarketCapRatio");
+        var $iMarketCapRatioComment = $("#iMarketCapRatioComment");
+        var $sSummary = $("#sSummary");
+
+        var niceNumber = function (x) { return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","); }
+
         var fetchURL = function (url, callback) {
             var url = "https://allorigins.me/get?method=raw&url=" + encodeURIComponent(url) + "&callback=?";
             $.get(url, function (response) {
@@ -103,30 +166,35 @@
             });
         };
 
+        var calculateSpredPercentage = function(offer, bid) { return parseFloat((((offer - bid) / offer) * 100)).toFixed(1); }
+
+        var calculateNetDebt = function(totalLiabilities, cash) { return parseFloat(totalLiabilities - cash).toFixed(0); }
+
+        var calculateDebtRatio = function(netDebt, preTaxProft) { return parseFloat(netDebt / preTaxProft).toFixed(1); }
+
+        var calculateValueRatio = function(marketcap, preTaxProft) { return parseFloat(marketcap / preTaxProft).toFixed(1); }
+
         var calculate = function () {
             //Spread
-            var offer = $inOffer.val();
-            var bid = $inBid.val();
-            var spread_difference = offer - bid;
-            var spread_percentage = parseFloat(((spread_difference / offer) * 100)).toFixed(2);
+            var spread_percentage = calculateSpredPercentage($inOffer.val(), $inBid.val());
             $inSpread.val(spread_percentage);
             var spread_answer = Math.round(spread_percentage) <= 3 ? "Yes" : "No";
             $iSpreadComment.text(spread_answer + ". The spread is " + spread_percentage + "%");
 
-            //Debt to Profit Ratio
-            var debt = $inNetDebt.val();
-            var profit = $inPretaxProfit.val();
-            var debt_proft_ratio = parseFloat(debt / profit).toFixed(2);
+            //Debt to Profit Ratio (Override net debt if cash and liabilities exist)
+            if($inTotalLiabilities.val().length > 0 && $inCash.val().length > 0)
+                $inNetDebt.val(calculateNetDebt($inTotalLiabilities.val(), $inCash.val()));
+            
+            var debt_proft_ratio = calculateDebtRatio($inNetDebt.val(), $inPretaxProfit.val());
             $inDebtRatio.val(debt_proft_ratio);
             var debt_proft_answer = Math.round(debt_proft_ratio) <= 3 ? "Yes" : "No";
-            $iDebtRatioComment.text(debt_proft_answer + ". The company had a pre-tax profit of £" + niceNumber(profit) + " and net debt of £" + niceNumber(debt) + " giving a debt to profit ratio of " + debt_proft_ratio);
+            $iDebtRatioComment.text(debt_proft_answer + ". The company had a pre-tax profit of £" + niceNumber($inPretaxProfit.val()) + " and net debt of £" + niceNumber($inNetDebt.val()) + " giving a debt to profit ratio of " + debt_proft_ratio);
 
             //Market Cap
-            var marketcap = $inMarketCap.val();
-            var market_profit_ratio = parseFloat(marketcap / profit).toFixed(2);
+            var market_profit_ratio = calculateValueRatio($inMarketCap.val(), $inPretaxProfit.val());
             $inMarketCapRatio.val(market_profit_ratio);
             var market_profit_answer = Math.round(market_profit_ratio) <= 15 ? "Yes" : "No";
-            $iMarketCapRatioComment.text(market_profit_answer + ". The company had a pre-tax profit of £" + niceNumber(profit) + " and a market cap of £" + niceNumber(marketcap) + " giving a market cap to profit ratio of " + market_profit_ratio);
+            $iMarketCapRatioComment.text(market_profit_answer + ". The company had a pre-tax profit of £" + niceNumber($inPretaxProfit.val()) + " and a market cap of £" + niceNumber($inMarketCap.val()) + " giving a market cap to profit ratio of " + market_profit_ratio);
 
             //Summary
             var summary = "Spread - " + spread_answer + ": " + spread_percentage + ". ";
@@ -135,35 +203,13 @@
             $sSummary.text(summary);
         };
 
-        $inURL = $("#inURL");
-        $btParse = $("#btParse");
-
-        var $inBid = $("#inBid");
-        var $inOffer = $("#inOffer");
-        var $inSpread = $("#inSpread");
-        var $iSpreadComment = $("#iSpreadComment");
-
-        var $inNetDebt = $("#inNetDebt");
-        var $inPretaxProfit = $("#inPretaxProfit");
-        var $inDebtRatio = $("#inDebtRatio");
-        var $iDebtRatioComment = $("#iDebtRatioComment");
-
-        var $inMarketCap = $("#inMarketCap");
-        var $inMarketCapRatio = $("#inMarketCapRatio");
-        var $iMarketCapRatioComment = $("#iMarketCapRatioComment");
-
-        var $sSummary = $("#sSummary");
-
         $btParse.on("click", function (event) {
             var lse_summary_url = $inURL.val();
 
             fetchURL(lse_summary_url, function (summary_response) {
                 var $summary_page = $(summary_response);
 
-                var hostname = $('<a>').prop('href', lse_summary_url).prop('hostname');
-                var lse_fundamentals_url = hostname + $summary_page.find("a:contains('Fundamentals')").attr("href");
-                //debug
-                //lse_fundamentals_url = "https://www.londonstockexchange.com/exchange/prices/stocks/summary/fundamentals.html?fourWayKey=GB0009035741GBGBXSSQ3";
+                //Extract bid and offer
 
                 var $trBidOffer = $summary_page.find("td:contains('Bid')").parent();
                 var $tdBid = $trBidOffer.find("td:nth-child(2)");
@@ -173,8 +219,13 @@
                 $inBid.val(bid);
                 $inOffer.val(offer);
 
+                var hostname = $('<a>').prop('href', lse_summary_url).prop('hostname');
+                var lse_fundamentals_url = hostname + $summary_page.find("a:contains('Fundamentals')").attr("href");
+
                 fetchURL(lse_fundamentals_url, function (fundamentals_response) {
                     var $fundamentals_page = $(fundamentals_response);
+
+                    //Extract fundamentals
 
                     var $trProf = $fundamentals_page.find("td:contains('Profit Before Tax')").parent();
                     var $tdProf = $trProf.find("td:last-child");
@@ -184,12 +235,17 @@
                     var $tdLiabilities = $trLiabilities.find("td:last-child");
                     var liabilities = parseFloat($tdLiabilities.text()) * 1000000;
 
+                    var $trCash = $fundamentals_page.find("td:contains('Cash at Bank & in Hand')").parent();
+                    var $tdCash = $trCash.find("td:last-child");
+                    var cash = parseFloat($tdCash.text()) * 1000000;
+
                     var $trMarketCap = $fundamentals_page.find("td:contains('Security market cap')").parent();
                     var $tdMarketCap = $trMarketCap.find("td:last-child");
                     var marketCap = parseFloat($tdMarketCap.text()) * 1000000;
 
                     $inPretaxProfit.val(prof);
-                    $inNetDebt.val(liabilities);
+                    $inTotalLiabilities.val(liabilities);
+                    $inCash.val(cash);
                     $inMarketCap.val(marketCap);
 
                     calculate();
