@@ -245,24 +245,24 @@
 
                     var $trProf = $fundamentals_page.find("td:contains('Profit Before Tax')").parent();
                     var $tdProf = $trProf.find("td:last-child");
-                    var prof = parseFloat($tdProf.text().replace(",", "")) * 1000000;
+                    var prof = Math.round(parseFloat($tdProf.text().replace(",", "")) * 1000000);
 
                     var $trLiabilities = $fundamentals_page.find("td:contains('Total Liabilities')").parent();
                     var $tdLiabilities = $trLiabilities.find("td:last-child");
-                    var liabilities = parseFloat($tdLiabilities.text().replace(",", "")) * 1000000;
+                    var liabilities = Math.round(($tdLiabilities.text().replace(",", "")) * 1000000);
 
                     var $trCash = $fundamentals_page.find("td:contains('Cash at Bank & in Hand')").parent();
                     var $tdCash = $trCash.find("td:last-child");
-                    var cash = parseFloat($tdCash.text().replace(",", "")) * 1000000;
+                    var cash = Math.round(parseFloat($tdCash.text().replace(",", "")) * 1000000);
 
                     var $trMarketCap = $fundamentals_page.find("td:contains('Security market cap')").parent();
                     var $tdMarketCap = $trMarketCap.find("td:last-child");
-                    var marketCap = parseFloat($tdMarketCap.text().replace(",", "")) * 1000000;
+                    var marketCap = Math.round(parseFloat($tdMarketCap.text().replace(",", "")) * 1000000);
 
-                    $inPretaxProfit.val(parseFloat(prof).toFixed(0));
-                    $inTotalLiabilities.val(parseFloat(liabilities).toFixed(0));
-                    $inCash.val(parseFloat(cash).toFixed(0));
-                    $inMarketCap.val(parseFloat(marketCap).toFixed(0));
+                    $inPretaxProfit.val(prof);
+                    $inTotalLiabilities.val(liabilities);
+                    $inCash.val(cash);
+                    $inMarketCap.val(marketCap);
 
                     calculate();
                 });
