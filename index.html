@@ -13,12 +13,20 @@
             font-family: Calibri, sans-serif;
             font-size: 11px;
         }
+
         h2 {
             font-size: 16px;
             margin: 10px 0px 0px 0px;
         }
-        #inURL{
+
+        #inSummaryURL,
+        #inConstituentsURL {
             margin-right: 4px;
+        }
+
+        input[type='number'] {
+            width: 80px;
+            text-align: right;
         }
 
         input:read-only {
@@ -26,44 +34,62 @@
             border-style: solid;
             border-width: 1px;
         }
+
+        img#imgLoading {
+            vertical-align: middle;
+        }
     </style>
 </head>
 
-<body>    
+<body>
     <table>
         <tr>
             <td>&nbsp;</td>
             <td>
-                <h2>LSE Summary Page URL</h2>
-                <input type="url" id="inURL" style="width:600px"><button id="btParse">Parse</button>
+                <h2>LSE Page Parser</h2>
+                <i>Parses and extract data either from a single summary page or list</i>
+            </td>
+        </tr>
+        <tr>
+            <td>Summary Page</td>
+            <td>
+                <input type="url" id="inSummaryURL" style="width:600px">
+                <button id="btSummaryParse">Parse</button>
+                <img src="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/0.16.1/images/loader-large.gif" id="imgLoading" width="16" height="16" style="display:none;">
+            </td>
+        </tr>
+        <tr>
+            <td>Constituents Page</td>
+            <td>
+                <input type="url" id="inConstituentsURL" style="width:600px" value="https://www.londonstockexchange.com/exchange/prices-and-markets/stocks/indices/summary/summary-indices-constituents.html?index=ASX">
+                <button id="btConstituentsParse">Parse</button>
             </td>
         </tr>
         <tr>
             <td>&nbsp;</td>
             <td>
-                    <h2>Spread</h2>
-                    <i>Should be less than or equal to 3</i>
+                <h2>Spread</h2>
+                <i>Should be less than or equal to 3</i>
             </td>
         </tr>
         <tr>
             <td>Offer</td>
             <td>
-                <input id="inOffer" type="text" />
+                <input id="inOffer" type="number" />
                 <i>What the sell at (always higher than the bid)</i>
             </td>
         </tr>
         <tr>
             <td>Bid</td>
             <td>
-                <input id="inBid" type="text" />
+                <input id="inBid" type="number" />
                 <i>What they buy at</i>
             </td>
         </tr>
         <tr>
             <td>Spread</td>
             <td>
-                <input id="inSpread" readonly type="text" />
-                <span id="iSpreadComment"></span>
+                <input id="inSpread" readonly type="number" />
             </td>
         </tr>
         <tr>
@@ -76,32 +102,31 @@
         <tr>
             <td>Total Liabilities</td>
             <td>
-                <input id="inTotalLiabilities" type="text" />
+                <input id="inTotalLiabilities" type="number" />
             </td>
         </tr>
         <tr>
             <td>Cash</td>
             <td>
-                <input id="inCash" type="text" />
+                <input id="inCash" type="number" />
             </td>
         </tr>
         <tr>
             <td>Net Debt</td>
             <td>
-                <input id="inNetDebt" type="text" />
+                <input id="inNetDebt" type="number" />
             </td>
         </tr>
         <tr>
             <td>Pre-tax Profit</td>
             <td>
-                <input id="inPretaxProfit" type="text" />
+                <input id="inPretaxProfit" type="number" />
             </td>
         </tr>
         <tr>
             <td>Debt Ratio</td>
             <td>
-                <input id="inDebtRatio" readonly type="text" />
-                <span id="iDebtRatioComment"></span>
+                <input id="inDebtRatio" readonly type="number" />
             </td>
         </tr>
         <tr>
@@ -114,48 +139,53 @@
         <tr>
             <td>Market Cap.</td>
             <td>
-                <input id="inMarketCap" type="text" />
+                <input id="inMarketCap" type="number" />
             </td>
         </tr>
         <tr>
             <td>Market Ratio</td>
             <td>
-                <input id="inMarketCapRatio" readonly type="text" />
-                <span id="iMarketCapRatioComment"></span>
-            </td>
-        </tr>
-        <tr>
-            <td>&nbsp;</td>
-            <td>
-                <h2>Summary</h2>
-                <i>A brief description of the above</i>
-            </td>
-        </tr>
-        <tr>
-            <td>&nbsp;</td>
-            <td>
-                <span id="sSummary"></span>
+                <input id="inMarketCapRatio" readonly type="number" />
             </td>
         </tr>
     </table>
+    <h2>History</h2>
+    <table id="tbHistory">
+        <thead>
+            <tr>
+                <th>Symbol</th>
+                <th>Offer</th>
+                <th>Bid</th>
+                <th>Spread</th>
+                <th>Total Liabilities</th>
+                <th>Cash</th>
+                <th>Net Debt</th>
+                <th>Debt Ratio</th>
+                <th>Market Cap.</th>
+                <th>Market Ratio</th>
+            </tr>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
+
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
     <script>
-        var $inURL = $("#inURL");
-        var $btParse = $("#btParse");
+        var $inSummaryURL = $("#inSummaryURL");
+        var $btSummaryParse = $("#btSummaryParse");
+        var $inConstituentsURL = $("#inConstituentsURL");
+        var $btConstituentsParse = $("#btConstituentsParse");
+        var $imgLoading = $("#imgLoading");        
         var $inBid = $("#inBid");
         var $inOffer = $("#inOffer");
         var $inSpread = $("#inSpread");
-        var $iSpreadComment = $("#iSpreadComment");
         var $inTotalLiabilities = $("#inTotalLiabilities");
         var $inCash = $("#inCash");
         var $inNetDebt = $("#inNetDebt");
         var $inPretaxProfit = $("#inPretaxProfit");
         var $inDebtRatio = $("#inDebtRatio");
-        var $iDebtRatioComment = $("#iDebtRatioComment");
         var $inMarketCap = $("#inMarketCap");
         var $inMarketCapRatio = $("#inMarketCapRatio");
-        var $iMarketCapRatioComment = $("#iMarketCapRatioComment");
-        var $sSummary = $("#sSummary");
 
         var niceNumber = function (x) { return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","); }
 
@@ -166,111 +196,199 @@
             });
         };
 
-        var calculateSpredPercentage = function(offer, bid) { 
+        var calculateSpredPercentage = function (offer, bid) {
             offer = parseFloat(offer).toFixed(2)
             bid = parseFloat(bid).toFixed(2)
-            return parseFloat((((offer - bid) / offer) * 100)).toFixed(1); 
+            return parseFloat((((offer - bid) / offer) * 100)).toFixed(1);
         }
 
-        var calculateNetDebt = function(totalLiabilities, cash) { 
+        var calculateNetDebt = function (totalLiabilities, cash) {
             totalLiabilities = parseFloat(totalLiabilities);
             cash = parseFloat(cash);
-            return parseFloat(totalLiabilities - cash).toFixed(0); 
-        }
-
-        var calculateDebtRatio = function(netDebt, preTaxProft) {
-            netDebt = parseFloat(netDebt);
-            preTaxProft = parseFloat(preTaxProft); 
-            return parseFloat(netDebt / preTaxProft).toFixed(1); 
-        }
-
-        var calculateValueRatio = function(marketcap, preTaxProft) { 
-            marketcap = parseFloat(marketcap);
-            preTaxProft = parseFloat(preTaxProft); 
-            return parseFloat(marketcap / preTaxProft).toFixed(1); 
-        }
-
-        var calculate = function () {
-            //Spread
-            var spread_percentage = calculateSpredPercentage($inOffer.val(), $inBid.val());
-            $inSpread.val(spread_percentage);
-            var spread_answer = Math.round(spread_percentage) <= 3 ? "Yes" : "No";
-            $iSpreadComment.text(spread_answer + ". The spread is " + spread_percentage + "%");
-
-            //Debt to Profit Ratio (Override net debt if cash and liabilities exist)
-            if($inTotalLiabilities.val().length > 0 && $inCash.val().length > 0)
-                $inNetDebt.val(calculateNetDebt($inTotalLiabilities.val(), $inCash.val()));
-            
-            var debt_proft_ratio = calculateDebtRatio($inNetDebt.val(), $inPretaxProfit.val());
-            $inDebtRatio.val(debt_proft_ratio);
-            var debt_proft_answer = Math.round(debt_proft_ratio) <= 3 ? "Yes" : "No";
-            $iDebtRatioComment.text(debt_proft_answer + ". The company had a pre-tax profit of £" + niceNumber($inPretaxProfit.val()) + " and net debt of £" + niceNumber($inNetDebt.val()) + " giving a debt to profit ratio of " + debt_proft_ratio);
-
-            //Market Cap
-            var market_profit_ratio = calculateValueRatio($inMarketCap.val(), $inPretaxProfit.val());
-            $inMarketCapRatio.val(market_profit_ratio);
-            var market_profit_answer = Math.round(market_profit_ratio) <= 15 ? "Yes" : "No";
-            $iMarketCapRatioComment.text(market_profit_answer + ". The company had a pre-tax profit of £" + niceNumber($inPretaxProfit.val()) + " and a market cap of £" + niceNumber($inMarketCap.val()) + " giving a market cap to profit ratio of " + market_profit_ratio);
-
-            //Summary
-            var summary = "Spread - " + spread_answer + ": " + spread_percentage + ". ";
-            summary += "Small Debt - " + debt_proft_answer + ": " + debt_proft_ratio + ". ";
-            summary += "Undervalued - " + market_profit_answer + ": " + market_profit_ratio + ".";
-            $sSummary.text(summary);
+            return parseFloat(totalLiabilities - cash).toFixed(0);
         };
 
-        $btParse.on("click", function (event) {
-            var lse_summary_url = $inURL.val();
+        var calculateDebtRatio = function (netDebt, preTaxProft) {
+            netDebt = parseFloat(netDebt);
+            preTaxProft = parseFloat(preTaxProft);
+            return parseFloat(netDebt / preTaxProft).toFixed(1);
+        };
 
-            fetchURL(lse_summary_url, function (summary_response) {
+        var calculateValueRatio = function (marketcap, preTaxProft) {
+            marketcap = parseFloat(marketcap);
+            preTaxProft = parseFloat(preTaxProft);
+            return parseFloat(marketcap / preTaxProft).toFixed(1);
+        };
+
+        var getSummaryPageData = function (summary_url, callback) {
+            fetchURL(summary_url, function (summary_response) {
+                var summary_response = summary_response.replace(/<img[^>]*>/g, "");
                 var $summary_page = $(summary_response);
 
-                //Extract bid and offer
+                //Extract bid and offer and fundamentals url
 
                 var $trBidOffer = $summary_page.find("td:contains('Bid')").parent();
                 var $tdBid = $trBidOffer.find("td:nth-child(2)");
                 var bid = parseFloat($tdBid.text().replace(",", "")).toFixed(2);
                 var $tdOffer = $trBidOffer.find("td:nth-child(4)");
                 var offer = parseFloat($tdOffer.text().replace(",", "")).toFixed(2);
-                $inBid.val(bid);
-                $inOffer.val(offer);
 
-                var hostname = $('<a>').prop('href', lse_summary_url).prop('hostname');
-                var lse_fundamentals_url = hostname + $summary_page.find("a:contains('Fundamentals')").attr("href");
+                var hostname = $('<a>').prop('href', summary_url).prop('hostname');
+                var fundamentals_url = hostname + $summary_page.find("a:contains('Fundamentals')").attr("href");
 
-                fetchURL(lse_fundamentals_url, function (fundamentals_response) {
-                    var $fundamentals_page = $(fundamentals_response);
-
-                    //Extract fundamentals
-
-                    var $trProf = $fundamentals_page.find("td:contains('Profit Before Tax')").parent();
-                    var $tdProf = $trProf.find("td:last-child");
-                    var prof = Math.round(parseFloat($tdProf.text().replace(",", "")) * 1000000);
-
-                    var $trLiabilities = $fundamentals_page.find("td:contains('Total Liabilities')").parent();
-                    var $tdLiabilities = $trLiabilities.find("td:last-child");
-                    var liabilities = Math.round(($tdLiabilities.text().replace(",", "")) * 1000000);
-
-                    var $trCash = $fundamentals_page.find("td:contains('Cash at Bank & in Hand')").parent();
-                    var $tdCash = $trCash.find("td:last-child");
-                    var cash = Math.round(parseFloat($tdCash.text().replace(",", "")) * 1000000);
-
-                    var $trMarketCap = $fundamentals_page.find("td:contains('Security market cap')").parent();
-                    var $tdMarketCap = $trMarketCap.find("td:last-child");
-                    var marketCap = Math.round(parseFloat($tdMarketCap.text().replace(",", "")) * 1000000);
-
-                    $inPretaxProfit.val(prof);
-                    $inTotalLiabilities.val(liabilities);
-                    $inCash.val(cash);
-                    $inMarketCap.val(marketCap);
-
-                    calculate();
+                callback({
+                    bid: bid,
+                    offer: offer,
+                    urls: {
+                        fundamentals: fundamentals_url
+                    }
                 });
             });
-        });
+        };
+
+        var getFundamentalsPageData = function (fundamentals_url, callback) {
+            fetchURL(fundamentals_url, function (fundamentals_response) {
+                var fundamentals_response = fundamentals_response.replace(/<img[^>]*>/g, "");
+                var $fundamentals_page = $(fundamentals_response);
+
+                //Extract fundamentals
+
+                var $trProf = $fundamentals_page.find("td:contains('Profit Before Tax')").parent();
+                var $tdProf = $trProf.find("td:last-child");
+                var prof = Math.round(parseFloat($tdProf.text().replace(",", "")) * 1000000);
+
+                var $trLiabilities = $fundamentals_page.find("td:contains('Total Liabilities')").parent();
+                var $tdLiabilities = $trLiabilities.find("td:last-child");
+                var liabilities = Math.round(($tdLiabilities.text().replace(",", "")) * 1000000);
+
+                var $trCash = $fundamentals_page.find("td:contains('Cash at Bank & in Hand')").parent();
+                var $tdCash = $trCash.find("td:last-child");
+                var cash = Math.round(parseFloat($tdCash.text().replace(",", "")) * 1000000);
+
+                var $trMarketCap = $fundamentals_page.find("td:contains('Security market cap')").parent();
+                var $tdMarketCap = $trMarketCap.find("td:last-child");
+                var marketCap = Math.round(parseFloat($tdMarketCap.text().replace(",", "")) * 1000000);
+
+                callback({
+                    profit: prof,
+                    liabilities: liabilities,
+                    cash: cash,
+                    marketCap: marketCap
+                });
+            });
+        }
+
+        var getAllPageData = function (summary_url, callback) {
+            getSummaryPageData(summary_url, function (summary_data) {
+                getFundamentalsPageData(summary_data.urls.fundamentals, function (fundamentals_data) {
+                    callback({
+                        summary_data: summary_data,
+                        fundamentals_data: fundamentals_data
+                    });
+                });
+            });
+        };
+
+        var bindData = function(data){
+            $inBid.val(data.summary_data.bid);
+            $inOffer.val(data.summary_data.offer);
+            $inPretaxProfit.val(data.fundamentals_data.profit);
+            $inTotalLiabilities.val(data.fundamentals_data.liabilities);
+            $inCash.val(data.fundamentals_data.cash);
+            $inMarketCap.val(data.fundamentals_data.marketCap);
+        }
+
+        var calculate = function () {
+            
+            //Spread
+            var spread_percentage = calculateSpredPercentage($inOffer.val(), $inBid.val());
+            $inSpread.val(spread_percentage);
+            $inSpread.css("background-color", spread_percentage <= 3 ? "#9f9" : "#f99");
+
+            //Debt to Profit Ratio (Override net debt if cash and liabilities exist)
+            if ($inTotalLiabilities.val().length > 0 && $inCash.val().length > 0)
+                $inNetDebt.val(calculateNetDebt($inTotalLiabilities.val(), $inCash.val()));
+
+            var debt_proft_ratio = calculateDebtRatio($inNetDebt.val(), $inPretaxProfit.val());
+            $inDebtRatio.val(debt_proft_ratio);
+            $inDebtRatio.css("background-color", debt_proft_ratio <= 3 ? "#9f9" : "#f99");
+
+            //Market Cap
+            var market_profit_ratio = calculateValueRatio($inMarketCap.val(), $inPretaxProfit.val());
+            $inMarketCapRatio.val(market_profit_ratio);
+            $inMarketCapRatio.css("background-color", market_profit_ratio <= 15 ? "#9f9" : "#f99");
+        };
 
         $("input[type='text']").on("input", calculate);
 
+        $btSummaryParse.on("click", function (event) {
+            $imgLoading.show();
+            var summary_url = $inSummaryURL.val();
+            getAllPageData(summary_url, function (data) {
+                $imgLoading.hide();
+                bindData(data);
+                calculate();
+            });
+        });
+
+        $btConstituentsParse.on("click", function (event) {
+            var constituents_url = $inConstituentsURL.val();
+            
+            debugger;
+
+            var processPage = function(onComplete){
+                fetchURL(constituents_url, function (constituents_response) {
+                    var constituents_response = constituents_response.replace(/<img[^>]*>/g, "");
+                    var $constituents_response = $(constituents_response);
+
+                    var urls = [];
+                    var anchors = $constituents_response.find("td.name a");
+                    for(var i = 0; i < anchors.length ; i++) {
+                        var hostname = $('<a>').prop('href', constituents_url).prop('hostname');
+                        urls.push(hostname + $(anchors[i]).attr("href"));
+                    }
+                    
+                    var looperPointer = 0;
+                    var looper = function(url) {
+                        getAllPageData(url, function (data) {
+                            var row = "<tr>";
+                            row += "<td>Symbol</td>";
+                            row += "<td>" + data.summary_data.offer + "</td>";
+                            row += "<td>" + data.summary_data.bid + "</td>";
+                            var spread_percentage = calculateSpredPercentage(data.summary_data.offer, data.summary_data.bid);
+                            row += "<td style='background-color:" + (spread_percentage <= 3 ? "#9f9" : "#f99") + "'>" + spread_percentage + "</td>";
+                            row += "<td></td>";
+                            row += "<td></td>";
+                            row += "<td></td>";
+                            row += "<td></td>";
+                            row += "<td></td>";
+                            row += "<td></td>";
+                            row += "</tr>";
+
+                            $("table#tbHistory tbody").append(row);
+                            looper(urls[++looperPointer]);
+                        });
+                    };
+
+                    looper(urls[looperPointer]);
+
+                    /*
+                    $next = $constituents_response.find("a:contains('Next')").first();
+                    if($next.length > 0 || false) {
+                        var nex_constituents_url = hostname + $next.attr("href");
+                        processPage(nex_constituents_url);
+                    } 
+                    else {
+                        onComplete();
+                    }
+                    */
+                });
+            };
+
+            processPage(constituents_url, function(){
+
+            });
+        });
     </script>
 </body>
 
