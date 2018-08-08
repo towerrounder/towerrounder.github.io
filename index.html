@@ -229,9 +229,9 @@
 
                 var $trBidOffer = $summary_page.find("td:contains('Bid')").parent();
                 var $tdBid = $trBidOffer.find("td:nth-child(2)");
-                var bid = $tdBid.text();
+                var bid = parseFloat($tdBid.text().replace(",", "")).toFixed(2);
                 var $tdOffer = $trBidOffer.find("td:nth-child(4)");
-                var offer = $tdOffer.text();
+                var offer = parseFloat($tdOffer.text().replace(",", "")).toFixed(2);
                 $inBid.val(bid);
                 $inOffer.val(offer);
 
