@@ -223,7 +223,6 @@
             var lse_summary_url = $inURL.val();
 
             fetchURL(lse_summary_url, function (summary_response) {
-                    debugger;
                 var $summary_page = $(summary_response);
 
                 //Extract bid and offer
@@ -240,7 +239,6 @@
                 var lse_fundamentals_url = hostname + $summary_page.find("a:contains('Fundamentals')").attr("href");
 
                 fetchURL(lse_fundamentals_url, function (fundamentals_response) {
-                    debugger;
                     var $fundamentals_page = $(fundamentals_response);
 
                     //Extract fundamentals
@@ -261,10 +259,10 @@
                     var $tdMarketCap = $trMarketCap.find("td:last-child");
                     var marketCap = parseFloat($tdMarketCap.text().replace(",", "")) * 1000000;
 
-                    $inPretaxProfit.val(prof);
-                    $inTotalLiabilities.val(liabilities);
-                    $inCash.val(cash);
-                    $inMarketCap.val(marketCap);
+                    $inPretaxProfit.val(parseFloat(prof).toFixed(0));
+                    $inTotalLiabilities.val(parseFloat(liabilities).toFixed(0));
+                    $inCash.val(parseFloat(cash).toFixed(0));
+                    $inMarketCap.val(parseFloat(marketCap).toFixed(0));
 
                     calculate();
                 });
