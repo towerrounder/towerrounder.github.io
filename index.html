@@ -166,13 +166,29 @@
             });
         };
 
-        var calculateSpredPercentage = function(offer, bid) { return parseFloat((((offer - bid) / offer) * 100)).toFixed(1); }
+        var calculateSpredPercentage = function(offer, bid) { 
+            offer = parseFloat(offer).toFixed(2)
+            bid = parseFloat(bid).toFixed(2)
+            return parseFloat((((offer - bid) / offer) * 100)).toFixed(1); 
+        }
 
-        var calculateNetDebt = function(totalLiabilities, cash) { return parseFloat(totalLiabilities - cash).toFixed(0); }
+        var calculateNetDebt = function(totalLiabilities, cash) { 
+            totalLiabilities = parseFloat(totalLiabilities);
+            cash = parseFloat(cash);
+            return parseFloat(totalLiabilities - cash).toFixed(0); 
+        }
 
-        var calculateDebtRatio = function(netDebt, preTaxProft) { return parseFloat(netDebt / preTaxProft).toFixed(1); }
+        var calculateDebtRatio = function(netDebt, preTaxProft) {
+            netDebt = parseFloat(netDebt);
+            preTaxProft = parseFloat(preTaxProft); 
+            return parseFloat(netDebt / preTaxProft).toFixed(1); 
+        }
 
-        var calculateValueRatio = function(marketcap, preTaxProft) { return parseFloat(marketcap / preTaxProft).toFixed(1); }
+        var calculateValueRatio = function(marketcap, preTaxProft) { 
+            marketcap = parseFloat(marketcap);
+            preTaxProft = parseFloat(preTaxProft); 
+            return parseFloat(marketcap / preTaxProft).toFixed(1); 
+        }
 
         var calculate = function () {
             //Spread
@@ -207,6 +223,7 @@
             var lse_summary_url = $inURL.val();
 
             fetchURL(lse_summary_url, function (summary_response) {
+                    debugger;
                 var $summary_page = $(summary_response);
 
                 //Extract bid and offer
@@ -223,25 +240,26 @@
                 var lse_fundamentals_url = hostname + $summary_page.find("a:contains('Fundamentals')").attr("href");
 
                 fetchURL(lse_fundamentals_url, function (fundamentals_response) {
+                    debugger;
                     var $fundamentals_page = $(fundamentals_response);
 
                     //Extract fundamentals
 
                     var $trProf = $fundamentals_page.find("td:contains('Profit Before Tax')").parent();
                     var $tdProf = $trProf.find("td:last-child");
-                    var prof = parseFloat($tdProf.text()) * 1000000;
+                    var prof = parseFloat($tdProf.text().replace(",", "")) * 1000000;
 
                     var $trLiabilities = $fundamentals_page.find("td:contains('Total Liabilities')").parent();
                     var $tdLiabilities = $trLiabilities.find("td:last-child");
-                    var liabilities = parseFloat($tdLiabilities.text()) * 1000000;
+                    var liabilities = parseFloat($tdLiabilities.text().replace(",", "")) * 1000000;
 
                     var $trCash = $fundamentals_page.find("td:contains('Cash at Bank & in Hand')").parent();
                     var $tdCash = $trCash.find("td:last-child");
-                    var cash = parseFloat($tdCash.text()) * 1000000;
+                    var cash = parseFloat($tdCash.text().replace(",", "")) * 1000000;
 
                     var $trMarketCap = $fundamentals_page.find("td:contains('Security market cap')").parent();
                     var $tdMarketCap = $trMarketCap.find("td:last-child");
-                    var marketCap = parseFloat($tdMarketCap.text()) * 1000000;
+                    var marketCap = parseFloat($tdMarketCap.text().replace(",", "")) * 1000000;
 
                     $inPretaxProfit.val(prof);
                     $inTotalLiabilities.val(liabilities);
