@@ -426,6 +426,7 @@
         $btConstituentsParse.on("click", function (event) {
             $imgLoadingConstituents.show();
             var constituents_url = $inConstituentsURL.val();
+            var constituent_hostname = extractHostname(constituents_url);
 
             var processConstituentsPage = function (url, onProcessConstituentsComplete) {
 
@@ -437,12 +438,11 @@
                     var urls = [];
                     var anchors = $constituents_response.find("td.name a");
                     for (var i = 0; i < anchors.length; i++) {
-                        var hostname = $('<a>').prop('href', url).prop('hostname');
-                        urls.push(hostname + $(anchors[i]).attr("href"));
+                        urls.push(constituent_hostname + $(anchors[i]).attr("href"));
                     }
 
                     //Process each of them in turn, fetch the page, parse data, add to table, repeat....
-                    var looperPointer = 18;
+                    var looperPointer = 0;
                     var processSummryURL = function (url, onProcessSummryURLComplete) {
                         getAllPageData(url, function (data) {
                             $("table#tbHistory tbody").append(buildRow(data));
@@ -457,9 +457,8 @@
 
                     processSummryURL(urls[looperPointer], function(){
                         $next = $constituents_response.find("a:contains('Next')").first();
-                        if($next.length > 0 || false) {
-                            var next_url = hostname + $next.attr("href");
-                            processConstituentsPage(next_url, onProcessConstituentsComplete);
+                        if($next.length > 0) {
+                            processConstituentsPage(constituent_hostname + $next.attr("href"), onProcessConstituentsComplete);
                         } 
                         else {
                             onProcessConstituentsComplete();
