@@ -55,7 +55,8 @@
             <td>
                 <input type="url" id="inSummaryURL" style="width:600px">
                 <button id="btSummaryParse">Parse</button>
-                <img src="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/0.16.1/images/loader-large.gif" id="imgLoading" width="16" height="16" style="display:none;">
+                <img src="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/0.16.1/images/loader-large.gif" id="imgLoading" width="16" height="16"
+                    style="display:none;">
             </td>
         </tr>
         <tr>
@@ -175,7 +176,7 @@
         var $btSummaryParse = $("#btSummaryParse");
         var $inConstituentsURL = $("#inConstituentsURL");
         var $btConstituentsParse = $("#btConstituentsParse");
-        var $imgLoading = $("#imgLoading");        
+        var $imgLoading = $("#imgLoading");
         var $inBid = $("#inBid");
         var $inOffer = $("#inOffer");
         var $inSpread = $("#inSpread");
@@ -225,7 +226,9 @@
                 var summary_response = summary_response.replace(/<img[^>]*>/g, "");
                 var $summary_page = $(summary_response);
 
-                //Extract bid and offer and fundamentals url
+                //Extract symbol, bid,  offer and fundamentals url
+
+                var symbol = $summary_page.find("div.company-title a[title='Go to Company Summary']").text();
 
                 var $trBidOffer = $summary_page.find("td:contains('Bid')").parent();
                 var $tdBid = $trBidOffer.find("td:nth-child(2)");
@@ -233,10 +236,10 @@
                 var $tdOffer = $trBidOffer.find("td:nth-child(4)");
                 var offer = parseFloat($tdOffer.text().replace(",", "")).toFixed(2);
 
-                var hostname = $('<a>').prop('href', summary_url).prop('hostname');
-                var fundamentals_url = hostname + $summary_page.find("a:contains('Fundamentals')").attr("href");
+                var fundamentals_url = extractHostname(summary_url) + $summary_page.find("a:contains('Fundamentals')").attr("href");
 
                 callback({
+                    symbol: symbol,
                     bid: bid,
                     offer: offer,
                     urls: {
@@ -289,7 +292,7 @@
             });
         };
 
-        var bindData = function(data){
+        var bindData = function (data) {
             $inBid.val(data.summary_data.bid);
             $inOffer.val(data.summary_data.offer);
             $inPretaxProfit.val(data.fundamentals_data.profit);
@@ -298,8 +301,46 @@
             $inMarketCap.val(data.fundamentals_data.marketCap);
         }
 
+        function extractHostname(url) {
+            var hostname;
+            //find & remove protocol (http, ftp, etc.) and get hostname
+
+            if (url.indexOf("//") > -1) {
+                hostname = url.split('/')[2];
+            }
+            else {
+                hostname = url.split('/')[0];
+            }
+
+            //find & remove port number
+            hostname = hostname.split(':')[0];
+            //find & remove "?"
+            hostname = hostname.split('?')[0];
+
+            return hostname;
+        }
+
+        // To address those who want the "root domain," use this function:
+        function extractRootDomain(url) {
+            var domain = extractHostname(url),
+                splitArr = domain.split('.'),
+                arrLen = splitArr.length;
+
+            //extracting the root domain here
+            //if there is a subdomain 
+            if (arrLen > 2) {
+                domain = splitArr[arrLen - 2] + '.' + splitArr[arrLen - 1];
+                //check to see if it's using a Country Code Top Level Domain (ccTLD) (i.e. ".me.uk")
+                if (splitArr[arrLen - 2].length == 2 && splitArr[arrLen - 1].length == 2) {
+                    //this is using a ccTLD
+                    domain = splitArr[arrLen - 3] + '.' + domain;
+                }
+            }
+            return domain;
+        }
+
         var calculate = function () {
-            
+
             //Spread
             var spread_percentage = calculateSpredPercentage($inOffer.val(), $inBid.val());
             $inSpread.val(spread_percentage);
@@ -333,36 +374,41 @@
 
         $btConstituentsParse.on("click", function (event) {
             var constituents_url = $inConstituentsURL.val();
-            
+
             debugger;
 
-            var processPage = function(onComplete){
+            var processConstituentsPage = function (onComplete) {
                 fetchURL(constituents_url, function (constituents_response) {
                     var constituents_response = constituents_response.replace(/<img[^>]*>/g, "");
                     var $constituents_response = $(constituents_response);
 
+                    //Collect all the summary urls on the page
                     var urls = [];
                     var anchors = $constituents_response.find("td.name a");
-                    for(var i = 0; i < anchors.length ; i++) {
+                    for (var i = 0; i < anchors.length; i++) {
                         var hostname = $('<a>').prop('href', constituents_url).prop('hostname');
                         urls.push(hostname + $(anchors[i]).attr("href"));
                     }
-                    
+
+                    //Process each of them in turn
                     var looperPointer = 0;
-                    var looper = function(url) {
+                    var looper = function (url) {
                         getAllPageData(url, function (data) {
                             var row = "<tr>";
-                            row += "<td>Symbol</td>";
+                            row += "<td>" + data.summary_data.symbol + "</td>";
                             row += "<td>" + data.summary_data.offer + "</td>";
                             row += "<td>" + data.summary_data.bid + "</td>";
                             var spread_percentage = calculateSpredPercentage(data.summary_data.offer, data.summary_data.bid);
                             row += "<td style='background-color:" + (spread_percentage <= 3 ? "#9f9" : "#f99") + "'>" + spread_percentage + "</td>";
-                            row += "<td></td>";
-                            row += "<td></td>";
-                            row += "<td></td>";
-                            row += "<td></td>";
-                            row += "<td></td>";
-                            row += "<td></td>";
+                            row += "<td>" + niceNumber(data.fundamentals_data.liabilities) + "</td>";
+                            row += "<td>" + niceNumber(data.fundamentals_data.cash) + "</td>";
+                            var netDebt = calculateNetDebt(data.fundamentals_data.liabilities, data.fundamentals_data.cash);
+                            row += "<td>" + netDebt + "</td>";
+                            var debt_proft_ratio = calculateDebtRatio(netDebt, data.fundamentals_data.profit);
+                            row += "<td style='background-color:" + (debt_proft_ratio <= 3 ? "#9f9" : "#f99") + "'>" + debt_proft_ratio + "</td>";
+                            row += "<td>" + niceNumber(data.fundamentals_data.marketCap) + "</td>";
+                            var market_profit_ratio = calculateValueRatio(data.fundamentals_data.marketCap, data.fundamentals_data.profit);
+                            row += "<td style='background-color:" + (market_profit_ratio <= 15 ? "#9f9" : "#f99") + "'>" + market_profit_ratio + "</td>";
                             row += "</tr>";
 
                             $("table#tbHistory tbody").append(row);
@@ -385,7 +431,7 @@
                 });
             };
 
-            processPage(constituents_url, function(){
+            processConstituentsPage(constituents_url, function () {
 
             });
         });
