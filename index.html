@@ -55,12 +55,18 @@
         <tr>
             <td>&nbsp;</td>
             <td>
+                <button id="btBreakout">Test Breakout</button>
+            </td>
+        </tr>
+        <tr>
+            <td>&nbsp;</td>
+            <td>
                 <h2>LSE Page Parser</h2>
                 <i>Parses and extract data either from a single summary page or list</i>
             </td>
         </tr>
         <tr>
-            <td>Summary Page</td>
+            <td>LSE Summary Page</td>
             <td>
                 <input type="url" id="inSummaryURL" style="width:600px">
                 <button id="btSummaryParse">Parse</button>
@@ -69,9 +75,9 @@
             </td>
         </tr>
         <tr>
-            <td>Constituents Page</td>
+            <td>LSE Constituents Page</td>
             <td>
-                <input type="url" id="inConstituentsURL" style="width:600px" value="https://www.londonstockexchange.com/exchange/prices-and-markets/stocks/indices/summary/summary-indices-constituents.html?index=ASX">
+                <input type="url" id="inConstituentsURL" style="width:600px" value="">
                 <button id="btConstituentsParse">Parse</button>
                 <img src="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/0.16.1/images/loader-large.gif" id="imgLoadingConstituents" width="16" height="16"
                     style="display:none;">
@@ -176,6 +182,13 @@
                 <th>Debt Ratio</th>
                 <th>Market Cap.</th>
                 <th>Market Ratio</th>
+                <th>Book Value Ratio</th>
+                <th>52 High</th>
+                <th>52 High Date</th>
+                <th>52 Low</th>
+                <th>52 Low Date</th>
+                <th>Breaking Up</th>
+                <th>Breaking Down</th>
             </tr>
         </thead>
         <tbody>
@@ -234,8 +247,49 @@
             return parseFloat(marketcap / preTaxProft).toFixed(1);
         };
 
+        var calculateBookValueRatio = function (totalLiabilities, totalAssets, marketCap) {
+            totalLiabilities = parseFloat(totalLiabilities);
+            totalAssets = parseFloat(totalAssets);
+            marketCap = parseFloat(marketCap);
+            return parseFloat((totalAssets - totalLiabilities) / marketCap).toFixed(1);
+        };
+
+        var daysDiff = function(firstDate, secondDate) {
+            var oneDay = 24*60*60*1000;
+            return Math.round(Math.abs((firstDate.getTime() - secondDate.getTime())/(oneDay)));
+        }
+
+        //This goes to www.lse.co.uk for breakout info
+        var get52WeekPageData = function (_52week_url, callback) {
+            fetchURL(_52week_url, function (_52week_response) {
+                var _52week_response = /<body.*?>([\s\S]*)<\/body>/.exec(_52week_response)[1];
+                var _52week_response = _52week_response.replace(/<img[^>]*>/g, "");
+                var $_52week_response = $(_52week_response);
+
+                //Extract the high low data
+
+                var $52High = $_52week_response.find("table.infoTable th.infoRow:contains('52 Week High')").first();
+                var _52HighValue = $52High.next().text();
+                var _52HighDate = $52High.next().next().next().text();
+
+                var $52Low = $_52week_response.find("table.infoTable th.infoRowBottom:contains('52 Week Low')").first();
+                var _52LowValue = $52Low.next().text();
+                var _52LowDate = $52Low.next().next().next().text();
+
+                callback({
+                    high52Value: _52HighValue,
+                    high52Date: _52HighDate,
+                    high52DateAsDate: new Date(_52HighDate),
+                    low52Value: _52LowValue,
+                    low52Date: _52LowDate,
+                    low52DateAsDate: new Date(_52LowDate)
+                });
+            });
+        };
+
         var getSummaryPageData = function (summary_url, callback) {
             fetchURL(summary_url, function (summary_response) {
+                var summary_response = /<body.*?>([\s\S]*)<\/body>/.exec(summary_response)[1];
                 var summary_response = summary_response.replace(/<img[^>]*>/g, "");
                 var $summary_page = $(summary_response);
 
@@ -268,6 +322,7 @@
 
         var getFundamentalsPageData = function (fundamentals_url, callback) {
             fetchURL(fundamentals_url, function (fundamentals_response) {
+                var fundamentals_response = /<body.*?>([\s\S]*)<\/body>/.exec(fundamentals_response)[1];
                 var fundamentals_response = fundamentals_response.replace(/<img[^>]*>/g, "");
                 var $fundamentals_page = $(fundamentals_response);
 
@@ -285,6 +340,11 @@
                 var $tdCash = $trCash.find("td:last-child");
                 var cash = Math.round(parseFloat($tdCash.text().replace(",", "")) * 1000000);
 
+                
+                var $trAssets = $fundamentals_page.find("td:contains('Total Assets')").parent();
+                var $tdAssets = $trAssets.find("td:last-child");
+                var assets = Math.round(($tdAssets.text().replace(",", "")) * 1000000);
+
                 var $trMarketCap = $fundamentals_page.find("td:contains('Security market cap')").parent();
                 var $tdMarketCap = $trMarketCap.find("td:last-child");
                 var marketCap = Math.round(parseFloat($tdMarketCap.text().replace(",", "")) * 1000000);
@@ -292,6 +352,7 @@
                 callback({
                     profit: prof,
                     liabilities: liabilities,
+                    assets: assets,
                     cash: cash,
                     marketCap: marketCap
                 });
@@ -300,21 +361,25 @@
 
         var getAllPageData = function (summary_url, callback) {
             getSummaryPageData(summary_url, function (summary_data) {
-                //Some times the LSE has no fundamentals page, hence null is returned
-                if (summary_data.urls.fundamentals != null) {
-                    getFundamentalsPageData(summary_data.urls.fundamentals, function (fundamentals_data) {
+                get52WeekPageData("http://www.lse.co.uk/SharePrice.asp?shareprice=" + summary_data.symbol, function(_52_week_data){
+                    //Some times the LSE has no fundamentals page, hence null is returned
+                    if (summary_data.urls.fundamentals != null) {
+                        getFundamentalsPageData(summary_data.urls.fundamentals, function (fundamentals_data) {
+                            callback({
+                                summary_data: summary_data,
+                                fundamentals_data: fundamentals_data,
+                                _52_week_data: _52_week_data
+                            });
+                        });
+                    }
+                    else{
                         callback({
                             summary_data: summary_data,
-                            fundamentals_data: fundamentals_data
+                            fundamentals_data: null,
+                            _52_week_data: _52_week_data
                         });
-                    });
-                }
-                else{
-                    callback({
-                        summary_data: summary_data,
-                        fundamentals_data: null
-                    });
-                }
+                    }
+                });
             });
         };
 
@@ -412,10 +477,35 @@
                     var market_profit_ratio = calculateValueRatio(data.fundamentals_data.marketCap, data.fundamentals_data.profit);
                     row += "<td style='background-color:" + (market_profit_ratio <= 15 ? "#9f9" : "#f99") + "'>" + market_profit_ratio + "</td>";
                 }
+
+                //Get Book value
+                var bookValueRatio = calculateBookValueRatio(data.fundamentals_data.liabilities, data.fundamentals_data.assets, data.fundamentals_data.marketCap);
+                if (bookValueRatio > 1) {
+                    row += "<td style='background-color: #99f'>" + bookValueRatio + "</td>";
+                }
+                else {
+                    row += "<td>" + bookValueRatio + "</td>";
+                }
             }
             else {
-                for(var i = 0; i < 7 ; i++)
+                for(var i = 0; i < 8 ; i++)
                     row += "<td style='background-color: #F4A460'>Missing</td>";
+            }
+
+            if(data._52_week_data != null) {
+                row += "<td>" + data._52_week_data.high52Value + "</td>";
+                row += "<td>" + data._52_week_data.high52Date + "</td>";
+                row += "<td>" + data._52_week_data.low52Value + "</td>";
+                row += "<td>" + data._52_week_data.low52Date + "</td>";
+                if(daysDiff(data._52_week_data.high52DateAsDate, new Date()) <= 7)
+                    row += "<td style='background-color: #99f'>Yes</td>";
+                else
+                    row += "<td>No</td>";
+
+                if(daysDiff(data._52_week_data.low52DateAsDate, new Date()) <= 7)
+                    row += "<td style='background-color: #99f'>Yes</td>";
+                else
+                    row += "<td>No</td>";
             }
 
             row += "</tr>";
@@ -469,6 +559,12 @@
 
             processConstituentsPage(constituents_url, function () {
                 alert("Done");
+            });
+        });
+
+        $("#btBreakout").on("click", function(event){
+            get52WeekPageData("http://www.lse.co.uk/SharePrice.asp?shareprice=TRD", function(breakout_data){
+                debugger;
             });
         });
     </script>
