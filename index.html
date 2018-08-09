@@ -55,12 +55,6 @@
         <tr>
             <td>&nbsp;</td>
             <td>
-                <button id="btBreakout">Test Breakout</button>
-            </td>
-        </tr>
-        <tr>
-            <td>&nbsp;</td>
-            <td>
                 <h2>LSE Page Parser</h2>
                 <i>Parses and extract data either from a single summary page or list</i>
             </td>
@@ -172,6 +166,8 @@
         <thead>
             <tr>
                 <th>Symbol</th>
+                <th>Sector</th>
+                <th>Subsector</th>
                 <th>Offer</th>
                 <th>Bid</th>
                 <th>Spread</th>
@@ -296,6 +292,8 @@
                 //Extract symbol, bid,  offer and fundamentals url
 
                 var symbol = $summary_page.find("div.company-title a[title='Go to Company Summary']").text();
+                var sector = $summary_page.find("table[summary='Company Information'] td:contains('FTSE ICB sector')").next().text();
+                var subsector = $summary_page.find("table[summary='Company Information'] td:contains('FTSE ICB subsector')").next().text();
 
                 var $trBidOffer = $summary_page.find("td:contains('Bid')").parent();
                 var $tdBid = $trBidOffer.find("td:nth-child(2)");
@@ -311,6 +309,8 @@
 
                 callback({
                     symbol: symbol,
+                    sector: sector,
+                    subsector: subsector,
                     bid: bid,
                     offer: offer,
                     urls: {
@@ -437,6 +437,8 @@
         var buildRow = function(data) {
             var row = "<tr>";
             row += "<td>" + data.summary_data.symbol + "</td>";
+            row += "<td>" + data.summary_data.sector + "</td>";
+            row += "<td>" + data.summary_data.subsector + "</td>";
             row += "<td>" + data.summary_data.offer + "</td>";
             row += "<td>" + data.summary_data.bid + "</td>";
             //Spread
@@ -559,12 +561,6 @@
 
             processConstituentsPage(constituents_url, function () {
                 alert("Done");
-            });
-        });
-
-        $("#btBreakout").on("click", function(event){
-            get52WeekPageData("http://www.lse.co.uk/SharePrice.asp?shareprice=TRD", function(breakout_data){
-                debugger;
             });
         });
     </script>
