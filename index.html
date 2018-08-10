@@ -301,9 +301,9 @@
             return hostname;
         }
 
-        var buildRow = function(data) {
+        var buildRow = function(url, data) {
             var row = "<tr>";
-            row += "<td>" + data.summary_data.symbol + "</td>";
+            row += "<td><a href='" + url + "' target='_blank'>" + data.summary_data.symbol + "</a></td>";
             row += "<td>" + data.summary_data.sector + "</td>";
             row += "<td>" + data.summary_data.subsector + "</td>";
             row += "<td>" + data.summary_data.offer + "</td>";
@@ -387,7 +387,7 @@
             var summary_url = $inSummaryURL.val();
 
             getAllPageData(summary_url, function (data) {
-                $("table#tbHistory tbody").append(buildRow(data));
+                $("table#tbHistory tbody").append(buildRow(summary_url, data));
                 $imgLoadingSummary.hide();
             });
         });
@@ -414,7 +414,7 @@
                     var looperPointer = 0;
                     var processSummryURL = function (url, onProcessSummryURLComplete) {
                         getAllPageData(url, function (data) {
-                            $("table#tbHistory tbody").append(buildRow(data));
+                            $("table#tbHistory tbody").append(buildRow(url, data));
                             if(looperPointer < urls.length-1) {
                                 looperPointer += 1
                                 processSummryURL(urls[looperPointer], onProcessSummryURLComplete);
