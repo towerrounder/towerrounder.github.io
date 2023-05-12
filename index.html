@@ -1,447 +1,344 @@
+<!DOCTYPE html>
 <html>
 
 <head>
-    <meta charset="UTF-8">
-    <style>
-        tr>td:first-child {
-            text-align: right;
-            width: 120px;
-            padding: 2px;
-        }
+	<title>Holiday Planner</title>
+	<style>
+		body,
+		html {
+			height: 100%;
+			margin: 0;
+			padding: 0;
+		}
 
-        body * {
-            font-family: Calibri, sans-serif;
-            font-size: 11px;
-        }
+		.container {
+			display: flex;
+			flex-direction: column;
+			height: 100%;
+		}
 
-        h2 {
-            font-size: 16px;
-            margin: 10px 0px 0px 0px;
-        }
+		header {
+			background-color: #f2f2f2;
+			padding: 10px;
+		}
 
-        #inSummaryURL,
-        #inConstituentsURL {
-            margin-right: 4px;
-        }
+		main {
+			flex: 1;
+			overflow-y: auto;
+		}
 
-        input[type='number'] {
-            width: 80px;
-            text-align: right;
-        }
+		footer {
+			background-color: #f2f2f2;
+			padding: 10px;
+		}
 
-        input:read-only {
-            background-color: #eee;
-            border-style: solid;
-            border-width: 1px;
-        }
+		table {
+			border-collapse: collapse;
+			width: 100%;
+		}
 
-        img#imgLoadingSummary, img#imgLoadingConstituents {
-            vertical-align: middle;
-        }
+		th,
+		td {
+			padding: 8px;
+			text-align: left;
+			border-bottom: 1px solid #ddd;
+		}
 
-        table#tbHistory {
-            border-collapse: collapse;
-        }
+		th {
+			background-color: #f2f2f2;
+		}
 
-        table#tbHistory, table#tbHistory th, table#tbHistory td {
-            border: 1px solid #888;
-            padding:4px 10px 2px 10px;
-        }
-    </style>
+		button {
+			margin-right: 10px;
+		}
+	</style>
 </head>
 
 <body>
-    <table>
-        <tr>
-            <td>&nbsp;</td>
-            <td>
-                <h2>LSE Page Parser</h2>
-                <i>Parses and extract data either from a single summary page or list</i>
-            </td>
-        </tr>
-        <tr>
-            <td>LSE Summary Page</td>
-            <td>
-                <input type="url" id="inSummaryURL" style="width:600px">
-                <button id="btSummaryParse">Parse</button>
-                <img src="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/0.16.1/images/loader-large.gif" id="imgLoadingSummary" width="16" height="16"
-                    style="display:none;">
-            </td>
-        </tr>
-        <tr>
-            <td>LSE Constituents Page</td>
-            <td>
-                <input type="url" id="inConstituentsURL" style="width:600px" value="">
-                <button id="btConstituentsParse">Parse</button>
-                <img src="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/0.16.1/images/loader-large.gif" id="imgLoadingConstituents" width="16" height="16"
-                    style="display:none;">
-            </td>
-        </tr>
-    </table>
-    <h2>History</h2>
-    <table id="tbHistory">
-        <thead>
-            <tr>
-                <th>Symbol</th>
-                <th>Sector</th>
-                <th>Subsector</th>
-                <th>Offer</th>
-                <th>Bid</th>
-                <th>Spread</th>
-                <th>Total Liabilities</th>
-                <th>Cash</th>
-                <th>Net Debt</th>
-                <th>Pre-tax Profit</th>
-                <th>Debt Ratio</th>
-                <th>Market Cap.</th>
-                <th>Market Ratio</th>
-                <th>Book Value Ratio</th>
-                <th>52 High</th>
-                <th>52 High Date</th>
-                <th>52 Low</th>
-                <th>52 Low Date</th>
-                <th>Breaking Up</th>
-                <th>Breaking Down</th>
-            </tr>
-        </thead>
-        <tbody>
-        </tbody>
-    </table>
+	<div class="container">
+		<header>
+			<h1>Date Picker</h1>
+			<div id="dateRange">
+				<label for="startDate">Start Date:</label>
+				<input type="date" id="startDate">
+				<label for="endDate">End Date:</label>
+				<input type="date" id="endDate">
+			</div>
+			<div id="buttons">
+				<button id="selectAM">Select All AM</button>
+				<button id="deselectAM">Deselect All AM</button>
+				<button id="selectPM">Select All PM</button>
+				<button id="deselectPM">Deselect All PM</button>
+				<button id="selectNight">Select All NIGHT</button>
+				<button id="deselectNight">Deselect All NIGHT</button>
+				<button id="selectAll">Select All</button>
+				<button id="deselectAll">Deselect All</button>
+				<button id="generateCSVButton">Generate CSV</button>
+			</div>
+		</header>
 
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-    <script>
+		<main>
+			<table id="daysTable">
+				<thead>
+					<tr>
+						<th>Date</th>
+						<th>AM</th>
+						<th>PM</th>
+						<th>NIGHT</th>
+						<th>Actions</th>
+					</tr>
+				</thead>
+				<tbody id="daysList"></tbody>
+			</table>
+		</main>
 
-        var $inSummaryURL = $("#inSummaryURL");
-        var $btSummaryParse = $("#btSummaryParse");
-        var $imgLoadingSummary = $("#imgLoadingSummary");
+		<footer>
+			<h3>Totals:</h3>
+			<p>AM Checkboxes: <span id="amTotal">0</span> | Checked AM Checkboxes: <span id="amCheckedTotal">0</span> |
+				AM:
+				<span id="amPercentage">0%</span>
+			</p>
+			<p>PM Checkboxes: <span id="pmTotal">0</span> | Checked PM Checkboxes: <span id="pmCheckedTotal">0</span> |
+				PM:
+				<span id="pmPercentage">0%</span>
+			</p>
+			<p>NIGHT Checkboxes: <span id="nightTotal">0</span> | Checked NIGHT Checkboxes: <span
+					id="nightCheckedTotal">0</span> | NIGHT: <span id="nightPercentage">0%</span></p>
+		</footer>
+	</div>
 
-        var $inConstituentsURL = $("#inConstituentsURL");
-        var $btConstituentsParse = $("#btConstituentsParse");
-        var $imgLoadingConstituents = $("#imgLoadingConstituents");
+	<script>
+		const startDatePicker = document.getElementById('startDate');
+		const endDatePicker = document.getElementById('endDate');
+		const daysList = document.getElementById('daysList');
+		const amTotal = document.getElementById('amTotal');
+		const amCheckedTotal = document.getElementById('amCheckedTotal');
+		const pmTotal = document.getElementById('pmTotal');
+		const pmCheckedTotal = document.getElementById('pmCheckedTotal');
+		const nightTotal = document.getElementById('nightTotal');
+		const nightCheckedTotal = document.getElementById('nightCheckedTotal');
+		const amPercentage = document.getElementById('amPercentage');
+		const pmPercentage = document.getElementById('pmPercentage');
+		const nightPercentage = document.getElementById('nightPercentage');
 
-        var niceNumber = function (x) { return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","); }
+		const selectAMButton = document.getElementById('selectAM');
+		const deselectAMButton = document.getElementById('deselectAM');
+		const selectPMButton = document.getElementById('selectPM');
+		const deselectPMButton = document.getElementById('deselectPM');
+		const selectNightButton = document.getElementById('selectNight');
+		const deselectNightButton = document.getElementById('deselectNight');
+		const selectAllButton = document.getElementById('selectAll');
+		const deselectAllButton = document.getElementById('deselectAll');
+		const generateCSVButton = document.getElementById('generateCSVButton');
 
-        var fetchURL = function (url, callback) {
-            var url = "https://allorigins.me/get?method=raw&url=" + encodeURIComponent(url) + "&callback=?";
-            $.get(url, function (response) {
-                callback(response);
-            });
-        };
+		function calculateTotals() {
+			const checkboxes = document.querySelectorAll('input[type="checkbox"]');
 
-        var calculateSpredPercentage = function (offer, bid) {
-            offer = parseFloat(offer).toFixed(2)
-            bid = parseFloat(bid).toFixed(2)
-            return parseFloat((((offer - bid) / offer) * 100)).toFixed(1);
-        }
+			let amCount = 0;
+			let amCheckedCount = 0;
+			let pmCount = 0;
+			let pmCheckedCount = 0;
+			let nightCount = 0;
+			let nightCheckedCount = 0;
 
-        var calculateNetDebt = function (totalLiabilities, cash) {
-            totalLiabilities = parseFloat(totalLiabilities);
-            cash = parseFloat(cash);
-            return parseFloat(totalLiabilities - cash).toFixed(0);
-        };
+			checkboxes.forEach(checkbox => {
+				const checkboxId = checkbox.id;
+				const isChecked = checkbox.checked;
 
-        var calculateDebtRatio = function (netDebt, preTaxProft) {
-            netDebt = parseFloat(netDebt);
-            preTaxProft = parseFloat(preTaxProft);
-            return parseFloat(netDebt / preTaxProft).toFixed(1);
-        };
+				if (checkboxId.startsWith('am')) {
+					amCount++;
+					if (isChecked) {
+						amCheckedCount++;
+					}
+				} else if (checkboxId.startsWith('pm')) {
+					pmCount++;
+					if (isChecked) {
+						pmCheckedCount++;
+					}
+				} else if (checkboxId.startsWith('night')) {
+					nightCount++;
+					if (isChecked) {
+						nightCheckedCount++;
+					}
+				}
+			});
 
-        var calculateValueRatio = function (marketcap, preTaxProft) {
-            marketcap = parseFloat(marketcap);
-            preTaxProft = parseFloat(preTaxProft);
-            return parseFloat(marketcap / preTaxProft).toFixed(1);
-        };
+			amTotal.textContent = amCount;
+			amCheckedTotal.textContent = amCheckedCount;
+			pmTotal.textContent = pmCount;
+			pmCheckedTotal.textContent = pmCheckedCount;
+			nightTotal.textContent = nightCount;
+			nightCheckedTotal.textContent = nightCheckedCount;
 
-        var calculateBookValueRatio = function (totalLiabilities, totalAssets, marketCap) {
-            totalLiabilities = parseFloat(totalLiabilities);
-            totalAssets = parseFloat(totalAssets);
-            marketCap = parseFloat(marketCap);
-            return parseFloat((totalAssets - totalLiabilities) / marketCap).toFixed(1);
-        };
+			amPercentage.textContent = amCount !== 0 ? `${Math.round((amCheckedCount / amCount) * 100)}%` : '0%';
+			pmPercentage.textContent = pmCount !== 0 ? `${Math.round((pmCheckedCount / pmCount) * 100)}%` : '0%';
+			nightPercentage.textContent = nightCount !== 0 ? `${Math.round((nightCheckedCount / nightCount) * 100)}%` : '0%';
+		}
 
-        var daysDiff = function(firstDate, secondDate) {
-            var oneDay = 24*60*60*1000;
-            return Math.round(Math.abs((firstDate.getTime() - secondDate.getTime())/(oneDay)));
-        }
+		function createDayRow(dateString) {
+			const dayRow = document.createElement('tr');
 
-        //This goes to www.lse.co.uk for breakout info
-        var get52WeekPageData = function (_52week_url, callback) {
-            fetchURL(_52week_url, function (_52week_response) {
-                var _52week_response = /<body.*?>([\s\S]*)<\/body>/.exec(_52week_response)[1];
-                var _52week_response = _52week_response.replace(/<img[^>]*>/g, "");
-                var $_52week_response = $(_52week_response);
+			const dateCell = document.createElement('td');
+			dateCell.textContent = dateString;
+			dayRow.appendChild(dateCell);
 
-                //Extract the high low data
+			const amCell = document.createElement('td');
+			const amCheckbox = document.createElement('input');
+			amCheckbox.type = 'checkbox';
+			amCheckbox.id = 'am-' + dateString;
+			amCheckbox.addEventListener('change', calculateTotals);
+			amCell.appendChild(amCheckbox);
+			dayRow.appendChild(amCell);
 
-                var $52High = $_52week_response.find("table.infoTable th.infoRow:contains('52 Week High')").first();
-                var _52HighValue = $52High.next().text();
-                var _52HighDate = $52High.next().next().next().text();
+			const pmCell = document.createElement('td');
+			const pmCheckbox = document.createElement('input');
+			pmCheckbox.type = 'checkbox';
+			pmCheckbox.id = 'pm-' + dateString;
+			pmCheckbox.addEventListener('change', calculateTotals);
+			pmCell.appendChild(pmCheckbox);
+			dayRow.appendChild(pmCell);
 
-                var $52Low = $_52week_response.find("table.infoTable th.infoRowBottom:contains('52 Week Low')").first();
-                var _52LowValue = $52Low.next().text();
-                var _52LowDate = $52Low.next().next().next().text();
+			const nightCell = document.createElement('td');
+			const nightCheckbox = document.createElement('input');
+			nightCheckbox.type = 'checkbox';
+			nightCheckbox.id = 'night-' + dateString;
+			nightCheckbox.addEventListener('change', calculateTotals);
+			nightCell.appendChild(nightCheckbox);
+			dayRow.appendChild(nightCell);
 
-                callback({
-                    high52Value: _52HighValue,
-                    high52Date: _52HighDate,
-                    high52DateAsDate: new Date(_52HighDate),
-                    low52Value: _52LowValue,
-                    low52Date: _52LowDate,
-                    low52DateAsDate: new Date(_52LowDate)
-                });
-            });
-        };
+			const actionsCell = document.createElement('td');
+			const selectRowButton = document.createElement('button');
+			selectRowButton.textContent = 'Select Row';
+			selectRowButton.addEventListener('click', (event) => selectRowCheckboxes(event));
+			const deselectRowButton = document.createElement('button');
+			deselectRowButton.textContent = 'Deselect Row';
+			deselectRowButton.addEventListener('click', (event) => deselectRowCheckboxes(event));
+			actionsCell.appendChild(selectRowButton);
+			actionsCell.appendChild(deselectRowButton);
+			dayRow.appendChild(actionsCell);
 
-        var getSummaryPageData = function (summary_url, callback) {
-            fetchURL(summary_url, function (summary_response) {
-                var summary_response = /<body.*?>([\s\S]*)<\/body>/.exec(summary_response)[1];
-                var summary_response = summary_response.replace(/<img[^>]*>/g, "");
-                var $summary_page = $(summary_response);
+			return dayRow;
+		}
 
-                //Extract symbol, bid,  offer and fundamentals url
+		function selectRowCheckboxes(event) {
+			const row = event.target.closest('tr');
+			const checkboxes = row.querySelectorAll('input[type="checkbox"]');
+			checkboxes.forEach((checkbox) => (checkbox.checked = true));
+			calculateTotals();
+		}
 
-                var symbol = $summary_page.find("div.company-title a[title='Go to Company Summary']").text();
-                var sector = $summary_page.find("table[summary='Company Information'] td:contains('FTSE ICB sector')").next().text();
-                var subsector = $summary_page.find("table[summary='Company Information'] td:contains('FTSE ICB subsector')").next().text();
+		function deselectRowCheckboxes(event) {
+			const row = event.target.closest('tr');
+			const checkboxes = row.querySelectorAll('input[type="checkbox"]');
+			checkboxes.forEach((checkbox) => (checkbox.checked = false));
+			calculateTotals();
+		}
 
-                var $trBidOffer = $summary_page.find("td:contains('Bid')").parent();
-                var $tdBid = $trBidOffer.find("td:nth-child(2)");
-                var bid = parseFloat($tdBid.text().replace(",", "")).toFixed(2);
-                var $tdOffer = $trBidOffer.find("td:nth-child(4)");
-                var offer = parseFloat($tdOffer.text().replace(",", "")).toFixed(2);
+		function generateCSV() {
+  const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+  const dates = new Set();
 
-                //Some LSE share pages do not have a fundamentals tab :(
-                var $aFundamentals = $summary_page.find("a:contains('Fundamentals')");
-                var fundamentals_url = null;
-                if ($aFundamentals.length > 0)
-                    fundamentals_url = extractHostname(summary_url) + $summary_page.find("a:contains('Fundamentals')").attr("href");
+  checkboxes.forEach((checkbox) => {
+    const row = checkbox.closest('tr');
+    const date = row.firstChild.textContent;
+    dates.add(date);
+  });
 
-                callback({
-                    symbol: symbol,
-                    sector: sector,
-                    subsector: subsector,
-                    bid: bid,
-                    offer: offer,
-                    urls: {
-                        fundamentals: fundamentals_url
-                    }
-                });
-            });
-        };
+  const csvRows = [['Date', 'AM', 'PM', 'NIGHT']];
+  const totalsChecked = { AM: 0, PM: 0, NIGHT: 0 };
+  const totalsAll = { AM: 0, PM: 0, NIGHT: 0 };
 
-        var getFundamentalsPageData = function (fundamentals_url, callback) {
-            fetchURL(fundamentals_url, function (fundamentals_response) {
-                var fundamentals_response = /<body.*?>([\s\S]*)<\/body>/.exec(fundamentals_response)[1];
-                var fundamentals_response = fundamentals_response.replace(/<img[^>]*>/g, "");
-                var $fundamentals_page = $(fundamentals_response);
+  dates.forEach((date) => {
+    const amCheckbox = document.getElementById(`am-${date}`);
+    const pmCheckbox = document.getElementById(`pm-${date}`);
+    const nightCheckbox = document.getElementById(`night-${date}`);
 
-                //Extract fundamentals
+    const amChecked = amCheckbox.checked ? 1 : '';
+    const pmChecked = pmCheckbox.checked ? 1 : '';
+    const nightChecked = nightCheckbox.checked ? 1 : '';
 
-                var $trProf = $fundamentals_page.find("td:contains('Profit Before Tax')").parent();
-                var $tdProf = $trProf.find("td:last-child");
-                var prof = Math.round(parseFloat($tdProf.text().replace(",", "")) * 1000000);
+    csvRows.push([date, amChecked, pmChecked, nightChecked]);
 
-                var $trLiabilities = $fundamentals_page.find("td:contains('Total Liabilities')").parent();
-                var $tdLiabilities = $trLiabilities.find("td:last-child");
-                var liabilities = Math.round(($tdLiabilities.text().replace(",", "")) * 1000000);
+    if (amChecked) totalsChecked.AM++;
+    if (pmChecked) totalsChecked.PM++;
+    if (nightChecked) totalsChecked.NIGHT++;
 
-                var $trCash = $fundamentals_page.find("td:contains('Cash at Bank & in Hand')").parent();
-                var $tdCash = $trCash.find("td:last-child");
-                var cash = Math.round(parseFloat($tdCash.text().replace(",", "")) * 1000000);
+    if (amCheckbox) totalsAll.AM++;
+    if (pmCheckbox) totalsAll.PM++;
+    if (nightCheckbox) totalsAll.NIGHT++;
+  });
 
-                
-                var $trAssets = $fundamentals_page.find("td:contains('Total Assets')").parent();
-                var $tdAssets = $trAssets.find("td:last-child");
-                var assets = Math.round(($tdAssets.text().replace(",", "")) * 1000000);
+  const totalsCheckedRow = ['Totals (Checked)', totalsChecked.AM, totalsChecked.PM, totalsChecked.NIGHT];
+  const totalsAllRow = ['Totals (All)', totalsAll.AM, totalsAll.PM, totalsAll.NIGHT];
 
-                var $trMarketCap = $fundamentals_page.find("td:contains('Security market cap')").parent();
-                var $tdMarketCap = $trMarketCap.find("td:last-child");
-                var marketCap = Math.round(parseFloat($tdMarketCap.text().replace(",", "")) * 1000000);
+  csvRows.push(totalsCheckedRow);
+  csvRows.push(totalsAllRow);
 
-                callback({
-                    profit: prof,
-                    liabilities: liabilities,
-                    assets: assets,
-                    cash: cash,
-                    marketCap: marketCap
-                });
-            });
-        }
+  const csvContent = csvRows.map(row => row.join(',')).join('\n');
+  const encodedUri = encodeURI('data:text/csv;charset=utf-8,' + csvContent);
+  const link = document.createElement('a');
+  link.setAttribute('href', encodedUri);
+  link.setAttribute('download', 'dates.csv');
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
 
-        var getAllPageData = function (summary_url, callback) {
-            getSummaryPageData(summary_url, function (summary_data) {
-                get52WeekPageData("http://www.lse.co.uk/SharePrice.asp?shareprice=" + summary_data.symbol, function(_52_week_data){
-                    //Some times the LSE has no fundamentals page, hence null is returned
-                    if (summary_data.urls.fundamentals != null) {
-                        getFundamentalsPageData(summary_data.urls.fundamentals, function (fundamentals_data) {
-                            callback({
-                                summary_data: summary_data,
-                                fundamentals_data: fundamentals_data,
-                                _52_week_data: _52_week_data
-                            });
-                        });
-                    }
-                    else{
-                        callback({
-                            summary_data: summary_data,
-                            fundamentals_data: null,
-                            _52_week_data: _52_week_data
-                        });
-                    }
-                });
-            });
-        };
 
-        function extractHostname(url) {
-            var hostname = (url.indexOf("//") > -1) ? url.split('/')[2] : url.split('/')[0];
+		function updateDaysTable() {
+			daysList.innerHTML = '';
 
-            hostname = hostname.split(':')[0];
-            hostname = hostname.split('?')[0];
+			const startDate = new Date(startDatePicker.value);
+			const endDate = new Date(endDatePicker.value);
+			const currentDate = new Date(startDate);
 
-            return hostname;
-        }
+			while (currentDate <= endDate) {
+				const dateString = currentDate.toDateString();
+				const dayRow = createDayRow(dateString);
+				daysList.appendChild(dayRow);
 
-        var buildRow = function(url, data) {
-            var row = "<tr>";
-            row += "<td><a href='" + url + "' target='_blank'>" + data.summary_data.symbol + "</a></td>";
-            row += "<td>" + data.summary_data.sector + "</td>";
-            row += "<td>" + data.summary_data.subsector + "</td>";
-            row += "<td>" + data.summary_data.offer + "</td>";
-            row += "<td>" + data.summary_data.bid + "</td>";
-            //Spread
-            var spread_percentage = calculateSpredPercentage(data.summary_data.offer, data.summary_data.bid);
-            row += "<td style='background-color:" + (spread_percentage <= 3 ? "#9f9" : "#f99") + "'>" + spread_percentage + "</td>";
+				currentDate.setDate(currentDate.getDate() + 1);
+			}
+		}
 
-            if(data.fundamentals_data != null) {
-                row += "<td>" + niceNumber(data.fundamentals_data.liabilities) + "</td>";
+		function selectAllCheckboxes() {
+			const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+			checkboxes.forEach(checkbox => (checkbox.checked = true));
+			calculateTotals();
+		}
 
-                row += "<td>" + niceNumber(data.fundamentals_data.cash) + "</td>";
+		function deselectAllCheckboxes() {
+			const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+			checkboxes.forEach(checkbox => (checkbox.checked = false));
+			calculateTotals();
+		}
 
-                if (data.fundamentals_data.cash >= data.fundamentals_data.liabilities) {
-                    row += "<td style='background-color: #9f9'>0</td>";
-                }
-                else {
-                    var netDebt = calculateNetDebt(data.fundamentals_data.liabilities, data.fundamentals_data.cash);
-                    row += "<td>" + niceNumber(netDebt) + "</td>";
-                }
+		function selectCheckboxes(type) {
+			const checkboxes = document.querySelectorAll(`input[id^="${type}"]`);
+			checkboxes.forEach(checkbox => (checkbox.checked = true));
+			calculateTotals();
+		}
 
-                if (data.fundamentals_data.profit < 0) {
-                    row += "<td style='background-color: #f99'>" + niceNumber(data.fundamentals_data.profit) + "</td>";
-                    for(var i = 0; i < 3 ; i++)
-                        row += "<td style='background-color: #f99'>N/A</td>";
-                }
-                else {
-                    row += "<td>" + niceNumber(data.fundamentals_data.profit) + "</td>";
+		function deselectCheckboxes(type) {
+			const checkboxes = document.querySelectorAll(`input[id^="${type}"]`);
+			checkboxes.forEach(checkbox => (checkbox.checked = false));
+			calculateTotals();
+		}
 
-                    if (data.fundamentals_data.cash >= data.fundamentals_data.liabilities) {
-                        row += "<td style='background-color: #9f9'>0</td>";
-                    }
-                    else {
-                        var debt_proft_ratio = calculateDebtRatio(netDebt, data.fundamentals_data.profit);
-                        row += "<td style='background-color:" + (debt_proft_ratio <= 3 ? "#9f9" : "#f99") + "'>" + debt_proft_ratio + "</td>";
-                    }
+		selectAMButton.addEventListener('click', () => selectCheckboxes('am'));
+		deselectAMButton.addEventListener('click', () => deselectCheckboxes('am'));
+		selectPMButton.addEventListener('click', () => selectCheckboxes('pm'));
+		deselectPMButton.addEventListener('click', () => deselectCheckboxes('pm'));
+		selectNightButton.addEventListener('click', () => selectCheckboxes('night'));
+		deselectNightButton.addEventListener('click', () => deselectCheckboxes('night'));
+		selectAllButton.addEventListener('click', selectAllCheckboxes);
+		deselectAllButton.addEventListener('click', deselectAllCheckboxes);
+		startDatePicker.addEventListener('change', updateDaysTable);
+		endDatePicker.addEventListener('change', updateDaysTable);
+		generateCSVButton.addEventListener('click', generateCSV);
 
-                    row += "<td>" + niceNumber(data.fundamentals_data.marketCap) + "</td>";
-
-                    var market_profit_ratio = calculateValueRatio(data.fundamentals_data.marketCap, data.fundamentals_data.profit);
-                    row += "<td style='background-color:" + (market_profit_ratio <= 15 ? "#9f9" : "#f99") + "'>" + market_profit_ratio + "</td>";
-                }
-
-                //Get Book value
-                var bookValueRatio = calculateBookValueRatio(data.fundamentals_data.liabilities, data.fundamentals_data.assets, data.fundamentals_data.marketCap);
-                if (bookValueRatio > 1) {
-                    row += "<td style='background-color: #99f'>" + bookValueRatio + "</td>";
-                }
-                else {
-                    row += "<td>" + bookValueRatio + "</td>";
-                }
-            }
-            else {
-                for(var i = 0; i < 8 ; i++)
-                    row += "<td style='background-color: #F4A460'>Missing</td>";
-            }
-
-            if(data._52_week_data != null) {
-                row += "<td>" + data._52_week_data.high52Value + "</td>";
-                row += "<td>" + data._52_week_data.high52Date + "</td>";
-                row += "<td>" + data._52_week_data.low52Value + "</td>";
-                row += "<td>" + data._52_week_data.low52Date + "</td>";
-                if(daysDiff(data._52_week_data.high52DateAsDate, new Date()) <= 7)
-                    row += "<td style='background-color: #99f'>Yes</td>";
-                else
-                    row += "<td>No</td>";
-
-                if(daysDiff(data._52_week_data.low52DateAsDate, new Date()) <= 7)
-                    row += "<td style='background-color: #99f'>Yes</td>";
-                else
-                    row += "<td>No</td>";
-            }
-
-            row += "</tr>";
-
-            return row;
-        }
-
-        $btSummaryParse.on("click", function (event) {
-            $imgLoadingSummary.show();
-            var summary_url = $inSummaryURL.val();
-
-            getAllPageData(summary_url, function (data) {
-                $("table#tbHistory tbody").append(buildRow(summary_url, data));
-                $imgLoadingSummary.hide();
-            });
-        });
-
-        $btConstituentsParse.on("click", function (event) {
-            $imgLoadingConstituents.show();
-            var constituents_url = $inConstituentsURL.val();
-            var constituent_hostname = extractHostname(constituents_url);
-
-            var processConstituentsPage = function (url, onProcessConstituentsComplete) {
-
-                fetchURL(url, function (constituents_response) {
-                    var constituents_response = constituents_response.replace(/<img[^>]*>/g, "");
-                    var $constituents_response = $(constituents_response);
-
-                    //Collect all the summary urls on the page
-                    var urls = [];
-                    var anchors = $constituents_response.find("td.name a");
-                    for (var i = 0; i < anchors.length; i++) {
-                        urls.push(constituent_hostname + $(anchors[i]).attr("href"));
-                    }
-
-                    //Process each of them in turn, fetch the page, parse data, add to table, repeat....
-                    var looperPointer = 0;
-                    var processSummryURL = function (url, onProcessSummryURLComplete) {
-                        getAllPageData(url, function (data) {
-                            $("table#tbHistory tbody").append(buildRow(url, data));
-                            if(looperPointer < urls.length-1) {
-                                looperPointer += 1
-                                processSummryURL(urls[looperPointer], onProcessSummryURLComplete);
-                            }
-                            else
-                                onProcessSummryURLComplete();
-                        });
-                    };
-
-                    processSummryURL(urls[looperPointer], function(){
-                        $next = $constituents_response.find("a:contains('Next')").first();
-                        if($next.length > 0) {
-                            processConstituentsPage(constituent_hostname + $next.attr("href"), onProcessConstituentsComplete);
-                        } 
-                        else {
-                            onProcessConstituentsComplete();
-                        }
-                    });
-                });
-            };
-
-            processConstituentsPage(constituents_url, function () {
-                alert("Done");
-                $imgLoadingConstituents.hide();
-            });
-        });
-    </script>
+		updateDaysTable();
+	</script>
 </body>
 
 </html>
